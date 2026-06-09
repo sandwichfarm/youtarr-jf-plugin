@@ -60,7 +60,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
   - [ ] 02-01-PLAN.md — Wave 0 live virtual-season probe: stub provider + episode/year fixtures + human-verify checkpoint (LIB-02, LIB-03)
   - [x] 02-02-PLAN.md — YoutarrNfoParser + YoutarrVideoData DTO + config fields (numbering scheme, max length); TDD (EPI-01..07, LIB-04)
-  - [ ] 02-03-PLAN.md — YoutarrEpisodeNfoProvider NFO→Episode mapping + FindNfoForVideo; TDD (LIB-02/03/04, EPI-01..07, CMP-01/02)
+  - [x] 02-03-PLAN.md — YoutarrEpisodeNfoProvider NFO→Episode mapping + FindNfoForVideo; TDD (LIB-02/03/04, EPI-01..07, CMP-01/02)
   - [ ] 02-04-PLAN.md — Replace stub with real provider; full-pipeline live verification (LIB-02/03/04, EPI-01, EPI-07, CMP-01/02)
 
 ### Phase 3: Artwork + Configuration Page

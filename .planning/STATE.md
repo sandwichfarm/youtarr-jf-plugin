@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "02-02 complete: YoutarrNfoParser + YoutarrVideoData DTO + PluginConfiguration fields (EpisodeNumberingScheme, MaxDescriptionLength) built TDD; full suite 49/49 green in Release. Built ahead of the live Docker checkpoints (01-03 live, 02-01 probe, 02-04 verify) which remain queued for when the operator starts the Docker daemon (sudo)."
-last_updated: "2026-06-09T23:45:00.000Z"
-last_activity: 2026-06-09 — 02-02 NFO parser/DTO + config contract layer complete (49/49 tests green); Docker checkpoints still pending daemon start
+stopped_at: "02-03 complete: YoutarrEpisodeNfoProvider (ILocalMetadataProvider<Episode>) + PathUtils.FindNfoForVideo built TDD; full suite 80/80 green in Release, publish DLL-only. The autonomous unit-testable Episode pipeline is now complete (parser+DTO+config+provider). Live Docker checkpoints (01-03 live, 02-01 probe, 02-04 verify) remain queued for when the operator starts the Docker daemon (sudo)."
+last_updated: "2026-06-10T00:10:00.000Z"
+last_activity: 2026-06-10 — 02-03 YoutarrEpisodeNfoProvider + FindNfoForVideo complete (80/80 tests green); Docker checkpoints still pending daemon start
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 3
-  completed_plans: 2
-  percent: 67
+  total_plans: 4
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 2 of 4 (Episodes + Year-Seasons)
-Plan: 1 of 4 complete in current phase (02-02); 02-01/02-03/02-04 remaining
+Plan: 2 of 4 complete in current phase (02-02, 02-03); 02-01/02-04 (live Docker) remaining
 Status: Executing
-Last activity: 2026-06-09 — Completed 02-02 (YoutarrNfoParser + YoutarrVideoData DTO + config fields; 49 tests green)
+Last activity: 2026-06-10 — Completed 02-03 (YoutarrEpisodeNfoProvider NFO→Episode + FindNfoForVideo; 80 tests green)
 
-Progress: [███████░░░] 67%
+Progress: [████████░░] 75%
 
 > Note: 02-02 was built ahead of the Wave-0 live probe (02-01) per the orchestrator's
 > sequencing note — the parser/DTO/config are pure logic fully covered by unit tests; only
@@ -42,16 +42,16 @@ Progress: [███████░░░] 67%
 
 **Velocity:**
 
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: ~9 min
-- Total execution time: ~0.5 hours
+- Total execution time: ~0.6 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 2 of 3 | 16 min | 8 min |
-| 02 | 1 of 4 | ~12 min | ~12 min |
+| 02 | 2 of 4 | ~22 min | ~11 min |
 
 **Recent Trend:**
 
@@ -82,6 +82,10 @@ Recent decisions affecting current work:
 - 02-02: EPI-07 date guard (IsValidYouTubeDate >=2005, <=now+2) applied to <premiered> only; <dateadded> captured raw on the DTO so 02-03 can implement premiered -> dateadded -> Season 0 fallback.
 - 02-02: DTO Genres/Tags typed IReadOnlyList<string> (init-only) to stay CA2227-clean; 02-03 converts to arrays via .ToArray() as the research MapToEpisode skeleton already does.
 - 02-02: EPI-01..07 / LIB-04 NOT yet marked complete in REQUIREMENTS — the parser/config is the contract layer; these requirements are satisfied end-to-end only once 02-03 maps the DTO onto Episode and 02-04 verifies live.
+- 02-03: MapToEpisode/FormatDescription are internal static taking an explicit PluginConfiguration ([assembly: InternalsVisibleTo] in new Properties/AssemblyInfo.cs); GetMetadata is a thin wrapper over Plugin.Instance?.Configuration — mapping logic unit-tested with no running server.
+- 02-03: EPI-07 chain realized as premiered→dateadded→Season 0 — when <premiered> invalid/missing but DateAdded valid, PremiereDate=DateAdded (episode keeps a date) while ParentIndexNumber=0/IndexNumber=null route the SEASON to Season 0. Download date never sets the year (T-02-10).
+- 02-03: No explicit DI registration for YoutarrEpisodeNfoProvider — auto-discovery (Pitfall 7), same as YoutarrSeriesNfoProvider. 02-04 live probe decides whether explicit registration / provider Order is needed.
+- 02-03: EPI/LIB/CMP requirements STILL marked Pending in REQUIREMENTS — unit-proven here but checked off only after 02-04 live verify confirms ParentIndexNumber/virtual-season behaviour end-to-end (continuing the 02-02 deferral decision).
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-09
-Stopped at: Completed 02-02-PLAN.md (YoutarrNfoParser + YoutarrVideoData DTO + PluginConfiguration EpisodeNumberingScheme/MaxDescriptionLength; TDD; full suite 49/49 green in Release). Next: 02-03 (YoutarrEpisodeNfoProvider NFO→Episode mapping, consumes this DTO) — also pure/unit-testable, can proceed before Docker is up. Live Docker checkpoints (01-03, 02-01, 02-04) remain queued for the operator to run once the daemon is started (sudo).
+Last session: 2026-06-10
+Stopped at: Completed 02-03-PLAN.md (YoutarrEpisodeNfoProvider NFO→Episode mapping + PathUtils.FindNfoForVideo; TDD; full suite 80/80 green in Release, publish DLL-only). The entire autonomous unit-testable Episode pipeline (parser + DTO + config + provider) is now built. Next: the live Docker checkpoints — 02-01 (virtual-season probe) and 02-04 (replace stub with real provider + full-pipeline live verify), plus 01-03 — which require the operator to start the Docker daemon (sudo). 02-04 also decides whether explicit DI registration is needed.
 Resume file: None
