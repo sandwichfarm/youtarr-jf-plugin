@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movie>
+  <title>Test Video Title</title>
+  <studio>My YouTube Channel</studio>
+  <premiered>2024-03-15</premiered>
+  <plot>A test video for plugin verification.</plot>
+  <uniqueid type="youtube">dQw4w9WgXcQ</uniqueid>
+</movie>

@@ -14,3 +14,9 @@ dist/
 # jprm packaging output
 *.zip
 manifest.json
+
+# Jellyfin load-test harness — generated/large runtime state.
+# media/ stays committed as fixtures; config/cache/plugins are regenerated.
+test/jellyfin-load-test/config/
+test/jellyfin-load-test/cache/
+test/jellyfin-load-test/plugins/

@@ -1,0 +1,2 @@
+# Committed fixture for CMP-03: a Youtarr "__" prefix grouping folder.
+# YoutarrPrefixIgnoreRule must suppress this so it never becomes a phantom Series.
