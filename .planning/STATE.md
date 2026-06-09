@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 Phase: 3 of 4 (Artwork + Configuration Page)
 Plan: 3 of 3 complete in current phase (03-01, 03-02); 03-03 (live verify, Docker) remaining. Phase 1/2 live Docker checkpoints (01-03, 02-01, 02-04) also still queued.
 Status: Ready to execute
-Last activity: 2026-06-09
+Last activity: 2026-06-10 - Completed quick task 260610-13m: add a manifest so the plugin can be installed in jellyfin
 
 Progress: [██████░░░░] 58%
 
@@ -107,6 +107,12 @@ None yet.
 
 - **CRITICAL (Phase 2):** Whether Jellyfin 10.10.x CreateSeasonsAsync() reliably creates virtual seasons from ParentIndexNumber in a flat folder layout is unconfirmed. Must validate with a minimal stub (one provider returning ParentIndexNumber=2024) on a live instance BEFORE building the full Episode pipeline. If broken, fallback is a post-scan task — but do not implement until confirmed broken.
 - **Setup note:** "Save metadata to media folders" must be disabled on Youtarr libraries or Jellyfin will overwrite NFO files (issue #12197).
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260610-13m | add a manifest so that the plugin can actually be installed in jellyfin | 2026-06-10 | 4d622dc | [260610-13m-add-a-manifest-so-that-the-plugin-can-ac](./quick/260610-13m-add-a-manifest-so-that-the-plugin-can-ac/) |
 
 ## Deferred Items
 
