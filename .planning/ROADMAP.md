@@ -108,4 +108,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Scaffold + Series Proof | 2/3 | In Progress|  |
 | 2. Episodes + Year-Seasons | 1/4 | In Progress | - |
 | 3. Artwork + Configuration Page | 2/3 | In Progress|  |
-| 4. Packaging + Distribution | 0/TBD | Not started | - |
+| 4. Packaging + Distribution | 1/2 | In Progress|  |

@@ -50,8 +50,8 @@ Requirements for the initial release. Each maps to a roadmap phase.
 
 ### Packaging (PKG)
 
-- [ ] **PKG-01**: Build produces a versioned plugin ZIP suitable for manual install
-- [ ] **PKG-02**: A plugin-repository `manifest.json` is generated so the plugin can be published later
+- [x] **PKG-01**: Build produces a versioned plugin ZIP suitable for manual install
+- [x] **PKG-02**: A plugin-repository `manifest.json` is generated so the plugin can be published later
 
 ## v2 Requirements
 
@@ -111,8 +111,8 @@ Which phases cover which requirements. Populated during roadmap creation.
 | CMP-01 | Phase 2 | Pending |
 | CMP-02 | Phase 2 | Pending |
 | CMP-03 | Phase 1 | Implemented (01-02; live verify 01-03) |
-| PKG-01 | Phase 4 | Pending |
-| PKG-02 | Phase 4 | Pending |
+| PKG-01 | Phase 4 | Complete |
+| PKG-02 | Phase 4 | Complete |
 
 **Coverage:**
 

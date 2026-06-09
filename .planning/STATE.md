@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 03-02-PLAN.md (PLUG-03 config page: configPage.html fleshed out with three controls — YearSeasons checkbox, EpisodeNumberingScheme select Default/YYYYMMDD, MaxDescriptionLength number — wired to ApiClient.get/updatePluginConfiguration via GUID; enum bound by name, parseInt for int; Task 1 PluginConfiguration fields already present, idempotent no-op; Release build + 85/85 tests green). Next: 03-03 (artwork + config live verify, Docker) which proves PLUG-03/ART-02/ART-04 end-to-end; plus still-queued 01-03 / 02-01 / 02-04 Docker checkpoints (operator must start docker via sudo)."
-last_updated: "2026-06-09T22:14:40.452Z"
+stopped_at: "Completed 04-01-PLAN.md (PKG-01/PKG-02: scripts/package.sh produces dist/youtarrmetadata_1.0.0.0.zip + dist/manifest.json via jprm; build.yaml v1.0.0.0 changelog; flat ZIP, manifest checksum == ZIP MD5, idempotent, csproj unmutated). Next: 04-02 (Docker harness install verify — operator must start docker)."
+last_updated: "2026-06-09T22:20:57.741Z"
 last_activity: 2026-06-09
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 12
-  completed_plans: 7
-  percent: 58
+  completed_plans: 8
+  percent: 25
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 3 of 4 (Artwork + Configuration Page)
-Plan: 2 of 3 complete in current phase (03-01, 03-02); 03-03 (live verify, Docker) remaining. Phase 1/2 live Docker checkpoints (01-03, 02-01, 02-04) also still queued.
+Plan: 3 of 3 complete in current phase (03-01, 03-02); 03-03 (live verify, Docker) remaining. Phase 1/2 live Docker checkpoints (01-03, 02-01, 02-04) also still queued.
 Status: Ready to execute
 Last activity: 2026-06-09
 
@@ -61,6 +61,7 @@ Progress: [██████░░░░] 58%
 
 *Updated after each plan completion*
 | Phase 03 P02 | ~4 min | 2 tasks | 1 files |
+| Phase 04 P01 | 2min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,7 @@ Recent decisions affecting current work:
 - 03-02: Dashboard config page (PLUG-03) code-complete — configPage.html exposes YearSeasons checkbox, EpisodeNumberingScheme select (Default/YYYYMMDD), MaxDescriptionLength number input, wired to ApiClient.getPluginConfiguration/updatePluginConfiguration with GUID 80302d7f-7fc3-4b1c-9a3f-fd85b98b9a69. No Plugin.cs/csproj change (GetPages + EmbeddedResource already in place); only the HTML body replaced. Release build + 85/85 tests green.
 - 03-02: EpisodeNumberingScheme bound by enum NAME (option values "Default"/"YYYYMMDD"), not integer — the enum serializes to config XML by name; integer option values would fail deserialization and silently reset the setting (Pitfall 4). MaxDescriptionLength wrapped in parseInt(value, 10) on save so the server receives an int, not a string (Pitfall 5 / threat T-03-01). Added emby-select to data-require.
 - 03-02: Task 1 (PluginConfiguration fields) was an idempotent no-op — YearSeasons/EpisodeNumberingScheme/MaxDescriptionLength already existed on disk from prior Phase 2 work with the exact required names/defaults, so they were left untouched (no commit for Task 1). PLUG-03 REQUIREMENTS checkbox left Pending until live persistence-across-restart is proven in 03-03 (Docker), matching the 03-01/02-02 deferral convention.
+- [Phase ?]: Phase 4 packaging: scripts/package.sh produces dist ZIP + manifest.json via jprm; csproj kept free of <Version> to avoid jprm mutation on build; placeholder sourceUrl until DIST-01/v2
 
 ### Pending Todos
 
@@ -114,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-09T22:14:35.142Z
-Stopped at: Completed 03-02-PLAN.md (PLUG-03 config page: configPage.html fleshed out with three controls — YearSeasons checkbox, EpisodeNumberingScheme select Default/YYYYMMDD, MaxDescriptionLength number — wired to ApiClient.get/updatePluginConfiguration via GUID; enum bound by name, parseInt for int; Task 1 PluginConfiguration fields already present, idempotent no-op; Release build + 85/85 tests green). Next: 03-03 (artwork + config live verify, Docker) which proves PLUG-03/ART-02/ART-04 end-to-end; plus still-queued 01-03 / 02-01 / 02-04 Docker checkpoints (operator must start docker via sudo).
+Last session: 2026-06-09T22:20:57.738Z
+Stopped at: Completed 04-01-PLAN.md (PKG-01/PKG-02: scripts/package.sh produces dist/youtarrmetadata_1.0.0.0.zip + dist/manifest.json via jprm; build.yaml v1.0.0.0 changelog; flat ZIP, manifest checksum == ZIP MD5, idempotent, csproj unmutated). Next: 04-02 (Docker harness install verify — operator must start docker).
 Resume file: None
