@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "03-01 complete: YoutarrSeriesImageProvider (ILocalImageProvider) surfaces channel poster.jpg as ImageType.Backdrop (ART-02), returns empty enumerable when poster.jpg absent (ART-04); Backdrop-only (built-in owns Series Primary), explicit DI safety-net registration, built TDD. Full suite 85/85 green in Release, publish DLL-only. This is the only custom artwork code in Phase 3. Live Docker checkpoints (01-03 live, 02-01 probe, 02-04 verify, 03-03 artwork+config verify) remain queued for when the operator starts the Docker daemon (sudo)."
-last_updated: "2026-06-10T00:25:00.000Z"
-last_activity: 2026-06-10 — 03-01 YoutarrSeriesImageProvider (poster.jpg → Backdrop) complete (85/85 tests green); Docker checkpoints still pending daemon start
+stopped_at: "Completed 03-02-PLAN.md (PLUG-03 config page: configPage.html fleshed out with three controls — YearSeasons checkbox, EpisodeNumberingScheme select Default/YYYYMMDD, MaxDescriptionLength number — wired to ApiClient.get/updatePluginConfiguration via GUID; enum bound by name, parseInt for int; Task 1 PluginConfiguration fields already present, idempotent no-op; Release build + 85/85 tests green). Next: 03-03 (artwork + config live verify, Docker) which proves PLUG-03/ART-02/ART-04 end-to-end; plus still-queued 01-03 / 02-01 / 02-04 Docker checkpoints (operator must start docker via sudo)."
+last_updated: "2026-06-09T22:14:40.452Z"
+last_activity: 2026-06-09
 progress:
   total_phases: 4
-  completed_phases: 0
-  total_plans: 14
-  completed_plans: 5
-  percent: 36
+  completed_phases: 1
+  total_plans: 12
+  completed_plans: 7
+  percent: 58
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 3 of 4 (Artwork + Configuration Page)
-Plan: 1 of 3 complete in current phase (03-01); 03-02 (config page) + 03-03 (live verify) remaining. Phase 1/2 live Docker checkpoints (01-03, 02-01, 02-04) also still queued.
-Status: Executing
-Last activity: 2026-06-10 — Completed 03-01 (YoutarrSeriesImageProvider poster.jpg → Backdrop, ART-02/ART-04; 85 tests green)
+Plan: 2 of 3 complete in current phase (03-01, 03-02); 03-03 (live verify, Docker) remaining. Phase 1/2 live Docker checkpoints (01-03, 02-01, 02-04) also still queued.
+Status: Ready to execute
+Last activity: 2026-06-09
 
-Progress: [███░░░░░░░] 36%
+Progress: [██████░░░░] 58%
 
 > Note: 02-02 was built ahead of the Wave-0 live probe (02-01) per the orchestrator's
 > sequencing note — the parser/DTO/config are pure logic fully covered by unit tests; only
@@ -52,7 +52,7 @@ Progress: [███░░░░░░░] 36%
 |-------|-------|-------|----------|
 | 01 | 2 of 3 | 16 min | 8 min |
 | 02 | 2 of 4 | ~22 min | ~11 min |
-| 03 | 1 of 3 | ~5 min | ~5 min |
+| 03 | 2 of 3 | ~9 min | ~5 min |
 
 **Recent Trend:**
 
@@ -60,6 +60,7 @@ Progress: [███░░░░░░░] 36%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 03 P02 | ~4 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting current work:
 - 03-01: GetImages yield-breaks (empty enumerable, LogDebug, no throw) when poster.jpg absent (ART-04). LocalImageInfo.FileInfo = new FileSystemMetadata { FullName = posterPath } (FullName is all the pipeline needs, mirrors built-in EpisodeLocalImageProvider).
 - 03-01: Explicit AddSingleton<ILocalImageProvider, YoutarrSeriesImageProvider>() added as a conservative DI safety net (mirrors IResolverIgnoreRule precedent); no custom Order. 03-03 live verify decides whether auto-discovery makes it redundant / whether an Order is needed.
 - 03-01: ART-02/ART-04 left Pending in REQUIREMENTS — unit-proven here, checked off only after 03-03 live artwork verify (continuing the 02-02/02-03 deferral convention). Portrait poster as 16:9 backdrop is an accepted, documented visual tradeoff.
+- 03-02: Dashboard config page (PLUG-03) code-complete — configPage.html exposes YearSeasons checkbox, EpisodeNumberingScheme select (Default/YYYYMMDD), MaxDescriptionLength number input, wired to ApiClient.getPluginConfiguration/updatePluginConfiguration with GUID 80302d7f-7fc3-4b1c-9a3f-fd85b98b9a69. No Plugin.cs/csproj change (GetPages + EmbeddedResource already in place); only the HTML body replaced. Release build + 85/85 tests green.
+- 03-02: EpisodeNumberingScheme bound by enum NAME (option values "Default"/"YYYYMMDD"), not integer — the enum serializes to config XML by name; integer option values would fail deserialization and silently reset the setting (Pitfall 4). MaxDescriptionLength wrapped in parseInt(value, 10) on save so the server receives an int, not a string (Pitfall 5 / threat T-03-01). Added emby-select to data-require.
+- 03-02: Task 1 (PluginConfiguration fields) was an idempotent no-op — YearSeasons/EpisodeNumberingScheme/MaxDescriptionLength already existed on disk from prior Phase 2 work with the exact required names/defaults, so they were left untouched (no commit for Task 1). PLUG-03 REQUIREMENTS checkbox left Pending until live persistence-across-restart is proven in 03-03 (Docker), matching the 03-01/02-02 deferral convention.
 
 ### Pending Todos
 
@@ -110,6 +114,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-10
-Stopped at: Completed 03-01-PLAN.md (YoutarrSeriesImageProvider — ILocalImageProvider surfacing channel poster.jpg as ImageType.Backdrop for ART-02, empty enumerable when absent for ART-04; Backdrop-only, explicit DI safety-net registration; TDD; full suite 85/85 green in Release, publish DLL-only). This is the only custom artwork code in Phase 3 — ART-01/ART-03 are handled by Jellyfin's built-in providers. Next: 03-02 (config page: 3 controls wired to ApiClient + PluginConfiguration, PLUG-03), then the live Docker checkpoints — 03-03 (artwork + config live verify), plus the still-queued 01-03 / 02-01 / 02-04 — which require the operator to start the Docker daemon (sudo).
+Last session: 2026-06-09T22:14:35.142Z
+Stopped at: Completed 03-02-PLAN.md (PLUG-03 config page: configPage.html fleshed out with three controls — YearSeasons checkbox, EpisodeNumberingScheme select Default/YYYYMMDD, MaxDescriptionLength number — wired to ApiClient.get/updatePluginConfiguration via GUID; enum bound by name, parseInt for int; Task 1 PluginConfiguration fields already present, idempotent no-op; Release build + 85/85 tests green). Next: 03-03 (artwork + config live verify, Docker) which proves PLUG-03/ART-02/ART-04 end-to-end; plus still-queued 01-03 / 02-01 / 02-04 Docker checkpoints (operator must start docker via sudo).
 Resume file: None
