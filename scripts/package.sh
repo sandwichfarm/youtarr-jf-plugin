@@ -1,13 +1,19 @@
 #!/usr/bin/env bash
 #
-# package.sh — Produces the distribution ZIP and manifest.json for the
-# Youtarr Jellyfin plugin in one reproducible command.
+# package.sh — Produces the distribution ZIP and the plugin-repository
+# manifest.json for the Youtarr Jellyfin plugin in one reproducible command.
 #
-# Outputs (all under dist/, which is gitignored):
-#   dist/youtarrmetadata_<version>.zip           — install ZIP (PKG-01)
-#   dist/youtarrmetadata_<version>.zip.md5sum    — MD5 sidecar (jprm-written)
-#   dist/youtarrmetadata_<version>.zip.meta.json — jprm build metadata
-#   dist/manifest.json                           — plugin repository manifest (PKG-02)
+# Outputs:
+#   dist/youtarrmetadata_<version>.zip           — install ZIP (PKG-01); gitignored
+#   dist/youtarrmetadata_<version>.zip.md5sum    — MD5 sidecar (jprm-written); gitignored
+#   dist/youtarrmetadata_<version>.zip.meta.json — jprm build metadata; gitignored
+#   dist/manifest.json                           — jprm working manifest; gitignored
+#   manifest.json (repo root)                    — TRACKED plugin-repository manifest
+#
+# The repo-root manifest.json is the file a user adds as a Jellyfin plugin
+# repository ("Dashboard → Plugins → Repositories → Add"). It is identical to
+# the jprm-generated dist/manifest.json EXCEPT its sourceUrl is rewritten to a
+# resolvable GitHub Release asset URL so the catalog install actually works.
 #
 # The ZIP contains a FLAT layout (no subdirectory):
 #   meta.json
@@ -19,11 +25,14 @@
 #
 # CHECKSUM NOTE: manifest.json stores the MD5 of the ZIP, computed by jprm at build
 # time. Never manually edit the ZIP after building — that invalidates the checksum
-# and Jellyfin's catalog installer will reject the install. If a change is needed,
-# re-run this script in full to rebuild the ZIP and regenerate the manifest.
+# and Jellyfin's catalog installer will reject the install. Re-run this script in
+# full to rebuild the ZIP and regenerate both manifests.
 #
-# sourceUrl NOTE: PLUGIN_URL below is a PLACEHOLDER GitHub releases URL. No GitHub
-# repository is published yet. Update PLUGIN_URL when the repo is live (v2 DIST-01).
+# sourceUrl: the repo-root manifest points at a GitHub Release asset:
+#   ${REPO_URL}/releases/download/v<version>/youtarrmetadata_<version>.zip
+# REPO_URL is derived from (in order): the REPO_URL env var; `git remote get-url
+# origin`; or the project default. The release that hosts this asset is created by
+# .github/workflows/release.yml when a v<version> tag is pushed.
 #
 # This script never runs docker and never escalates privileges. Starting the Docker
 # daemon and bringing the harness container up are operator steps (project policy:
@@ -32,6 +41,7 @@
 #
 # Usage:
 #   ./scripts/package.sh
+#   REPO_URL=https://github.com/OWNER/REPO ./scripts/package.sh   # override
 #
 set -euo pipefail
 
@@ -43,8 +53,39 @@ PLUGIN_DIR="${REPO_ROOT}/Jellyfin.Plugin.Youtarr"
 DIST_DIR="${REPO_ROOT}/dist"
 VERSION="1.0.0.0"
 
-# Placeholder URL — update when the GitHub repo is published (DIST-01 / v2).
-PLUGIN_URL="https://github.com/sandwich/youtarr-jf-plugin/releases/download/v${VERSION}/youtarrmetadata_${VERSION}.zip"
+# --- Derive the canonical https repo URL ------------------------------------
+# Precedence: explicit REPO_URL env (used by CI) > git origin > project default.
+normalize_repo_url() {
+  # Normalizes a git remote URL to https://github.com/OWNER/REPO (no .git suffix).
+  local url="$1"
+  url="${url%.git}"
+  case "${url}" in
+    git@*:*)
+      # git@github.com:OWNER/REPO  ->  https://github.com/OWNER/REPO
+      local host="${url#git@}"        # github.com:OWNER/REPO
+      host="${host%%:*}"             # github.com
+      local path="${url#*:}"          # OWNER/REPO
+      printf 'https://%s/%s' "${host}" "${path}"
+      ;;
+    ssh://git@*)
+      # ssh://git@github.com/OWNER/REPO -> https://github.com/OWNER/REPO
+      printf 'https://%s' "${url#ssh://git@}"
+      ;;
+    *)
+      printf '%s' "${url}"
+      ;;
+  esac
+}
+
+if [[ -n "${REPO_URL:-}" ]]; then
+  REPO_URL="$(normalize_repo_url "${REPO_URL}")"
+elif ORIGIN_URL="$(git -C "${REPO_ROOT}" remote get-url origin 2>/dev/null)" && [[ -n "${ORIGIN_URL}" ]]; then
+  REPO_URL="$(normalize_repo_url "${ORIGIN_URL}")"
+else
+  REPO_URL="https://github.com/sandwichfarm/youtarr-jf-plugin"
+fi
+
+SOURCE_URL="${REPO_URL}/releases/download/v${VERSION}/youtarrmetadata_${VERSION}.zip"
 
 echo "==> Building plugin ZIP with jprm ..."
 mkdir -p "${DIST_DIR}"
@@ -65,21 +106,55 @@ if [[ -z "${ZIP}" || ! -f "${ZIP}" ]]; then
 fi
 echo "==> Built: ${ZIP}"
 
-# Generate / update the repository manifest. 'jprm repo init' errors if the file
-# already exists, so guard it; 'jprm repo add' is idempotent (updates in place).
-MANIFEST="${DIST_DIR}/manifest.json"
-if [[ ! -f "${MANIFEST}" ]]; then
-  echo "==> Initializing manifest.json ..."
-  jprm repo init "${MANIFEST}"
+# Generate / update the working manifest in dist/. 'jprm repo init' errors if the
+# file already exists, so guard it; 'jprm repo add' is idempotent (updates the
+# entry for this GUID in place rather than duplicating it).
+DIST_MANIFEST="${DIST_DIR}/manifest.json"
+if [[ ! -f "${DIST_MANIFEST}" ]]; then
+  echo "==> Initializing dist/manifest.json ..."
+  jprm repo init "${DIST_MANIFEST}"
 fi
 
-echo "==> Adding plugin to manifest.json ..."
-jprm repo add "${MANIFEST}" "${ZIP}" --plugin-url "${PLUGIN_URL}"
+echo "==> Adding plugin to dist/manifest.json ..."
+# --plugin-url sets sourceUrl directly to the resolvable release asset, so the
+# dist manifest and the repo-root manifest carry an identical, working URL.
+jprm repo add "${DIST_MANIFEST}" "${ZIP}" --plugin-url "${SOURCE_URL}"
+
+# Emit the tracked repo-root manifest. It is the dist manifest with the sourceUrl
+# guaranteed-resolvable; jprm already wrote that sourceUrl above, so we copy the
+# jprm output verbatim (preserving checksum/targetAbi/timestamp/changelog/guid/name)
+# and re-assert sourceUrl defensively in case REPO_URL was overridden mid-run.
+ROOT_MANIFEST="${REPO_ROOT}/manifest.json"
+echo "==> Writing tracked repo-root manifest.json ..."
+python3 - "${DIST_MANIFEST}" "${ROOT_MANIFEST}" "${VERSION}" "${SOURCE_URL}" <<'PY'
+import json, sys
+
+dist_manifest, root_manifest, version, source_url = sys.argv[1:5]
+
+with open(dist_manifest, "r", encoding="utf-8") as fh:
+    data = json.load(fh)
+
+if not isinstance(data, list) or not data:
+    sys.exit("ERROR: dist manifest is not a non-empty JSON array")
+
+# Rewrite sourceUrl for the matching version entry across all plugin entries so
+# the published manifest always points at the resolvable release asset.
+for plugin in data:
+    for entry in plugin.get("versions", []):
+        if entry.get("version") == version:
+            entry["sourceUrl"] = source_url
+
+with open(root_manifest, "w", encoding="utf-8") as fh:
+    json.dump(data, fh, indent=4)
+    fh.write("\n")
+PY
 
 echo ""
 echo "==> Done."
-echo "    ZIP:      ${ZIP}"
-echo "    Manifest: ${MANIFEST}"
+echo "    ZIP:           ${ZIP}"
+echo "    Dist manifest: ${DIST_MANIFEST}"
+echo "    Repo manifest: ${ROOT_MANIFEST}"
+echo "    sourceUrl:     ${SOURCE_URL}"
 echo ""
 echo "To verify install in the Docker harness (operator runs these — NOT this script):"
 echo "    mkdir -p ${REPO_ROOT}/test/jellyfin-load-test/plugins/YoutarrMetadata_${VERSION}"

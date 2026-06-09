@@ -13,7 +13,9 @@ dist/
 
 # jprm packaging output
 *.zip
-manifest.json
+# Ignore the jprm-generated manifest inside dist/ only — the repo-root
+# manifest.json is tracked (it is the published plugin-repository manifest).
+/dist/manifest.json
 
 # Jellyfin load-test harness — generated/large runtime state.
 # media/ stays committed as fixtures; config/cache/plugins are regenerated.

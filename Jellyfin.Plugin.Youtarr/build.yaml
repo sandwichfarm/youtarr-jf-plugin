@@ -9,7 +9,7 @@ description: >
   Each YouTube channel folder becomes a Series; videos become Episodes grouped
   by upload year. Reads metadata from Youtarr NFO files. No API key required.
 category: "Metadata"
-owner: "sandwich"
+owner: "sandwichfarm"
 artifacts:
   - "Jellyfin.Plugin.Youtarr.dll"
 changelog: >
