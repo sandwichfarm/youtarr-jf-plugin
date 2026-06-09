@@ -88,37 +88,37 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLUG-01 | TBD | Pending |
-| PLUG-02 | TBD | Pending |
-| PLUG-03 | TBD | Pending |
-| LIB-01 | TBD | Pending |
-| LIB-02 | TBD | Pending |
-| LIB-03 | TBD | Pending |
-| LIB-04 | TBD | Pending |
-| EPI-01 | TBD | Pending |
-| EPI-02 | TBD | Pending |
-| EPI-03 | TBD | Pending |
-| EPI-04 | TBD | Pending |
-| EPI-05 | TBD | Pending |
-| EPI-06 | TBD | Pending |
-| EPI-07 | TBD | Pending |
-| SER-01 | TBD | Pending |
-| SER-02 | TBD | Pending |
-| ART-01 | TBD | Pending |
-| ART-02 | TBD | Pending |
-| ART-03 | TBD | Pending |
-| ART-04 | TBD | Pending |
-| CMP-01 | TBD | Pending |
-| CMP-02 | TBD | Pending |
-| CMP-03 | TBD | Pending |
-| PKG-01 | TBD | Pending |
-| PKG-02 | TBD | Pending |
+| PLUG-01 | Phase 1 | Pending |
+| PLUG-02 | Phase 4 | Pending |
+| PLUG-03 | Phase 3 | Pending |
+| LIB-01 | Phase 1 | Pending |
+| LIB-02 | Phase 2 | Pending |
+| LIB-03 | Phase 2 | Pending |
+| LIB-04 | Phase 2 | Pending |
+| EPI-01 | Phase 2 | Pending |
+| EPI-02 | Phase 2 | Pending |
+| EPI-03 | Phase 2 | Pending |
+| EPI-04 | Phase 2 | Pending |
+| EPI-05 | Phase 2 | Pending |
+| EPI-06 | Phase 2 | Pending |
+| EPI-07 | Phase 2 | Pending |
+| SER-01 | Phase 1 | Pending |
+| SER-02 | Phase 1 | Pending |
+| ART-01 | Phase 3 | Pending |
+| ART-02 | Phase 3 | Pending |
+| ART-03 | Phase 3 | Pending |
+| ART-04 | Phase 3 | Pending |
+| CMP-01 | Phase 2 | Pending |
+| CMP-02 | Phase 2 | Pending |
+| CMP-03 | Phase 1 | Pending |
+| PKG-01 | Phase 4 | Pending |
+| PKG-02 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 0 (roadmap pending)
-- Unmapped: 25 ⚠️ (resolved by roadmap)
+- Mapped to phases: 25 (roadmap complete)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-09*
-*Last updated: 2026-06-09 after initial definition*
+*Last updated: 2026-06-09 after roadmap creation — all 25 v1 requirements mapped*
