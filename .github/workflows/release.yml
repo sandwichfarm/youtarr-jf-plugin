@@ -1,0 +1,89 @@
+# Release workflow — builds the plugin ZIP, publishes it as a GitHub Release
+# asset, and refreshes the tracked repo-root manifest.json so the Jellyfin
+# repository-install sourceUrl resolves end to end.
+#
+# HOW TO CUT A RELEASE
+#   1. Bump `version:` (and `changelog:`) in Jellyfin.Plugin.Youtarr/build.yaml.
+#   2. Tag and push:   git tag v1.0.0.0 && git push --tags
+#   The tag must match v*.*.* (e.g. v1.0.0.0). The job builds dist/youtarrmetadata_<version>.zip,
+#   creates the GitHub Release for that tag with the ZIP attached, then commits the
+#   regenerated manifest.json back to the default branch.
+#
+# HOW USERS INSTALL (repository catalog — preferred)
+#   In Jellyfin: Dashboard -> Plugins -> Repositories -> Add, then paste:
+#     https://raw.githubusercontent.com/sandwichfarm/youtarr-jf-plugin/master/manifest.json
+#   The plugin then appears in the catalog and installs via the resolvable sourceUrl
+#   (the Release asset this workflow uploads).
+#
+# HOW USERS INSTALL (manual ZIP — fallback)
+#   Download youtarrmetadata_<version>.zip from the Release and extract it into
+#   $JELLYFIN_DATA/plugins/YoutarrMetadata_<version>/, then restart Jellyfin.
+#
+# Secrets: none. Uses only the built-in GITHUB_TOKEN with contents:write.
+
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history, push-capable token)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # The default GITHUB_TOKEN is persisted so the manifest commit-back can push.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install jprm
+        run: |
+          python3 -m pip install --user jprm
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build ZIP + refresh manifest
+        env:
+          # Drive package.sh so the manifest sourceUrl matches the release being created.
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: bash scripts/package.sh
+
+      - name: Create GitHub Release and upload ZIP asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: dist/youtarrmetadata_*.zip
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit refreshed manifest back to default branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # The tag is detached HEAD; commit the manifest onto the default branch.
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          git fetch origin "${DEFAULT_BRANCH}"
+          git checkout "${DEFAULT_BRANCH}"
+          git add manifest.json
+          # Guard: no-op (and never fail the job) when manifest.json is unchanged.
+          if git diff --cached --quiet; then
+            echo "manifest.json unchanged — nothing to commit."
+            exit 0
+          fi
+          git commit -m "chore(release): update manifest for ${{ github.ref_name }}"
+          git push origin "HEAD:${DEFAULT_BRANCH}"
