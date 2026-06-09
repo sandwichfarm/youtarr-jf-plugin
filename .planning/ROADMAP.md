@@ -77,7 +77,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. A channel folder with no `poster.jpg` and an Episode with no thumbnail image both display without errors and fall back gracefully to no image
   5. The Jellyfin Dashboard configuration page for the plugin shows controls for: year-seasons toggle, episode numbering scheme (Default vs. YYYYMMDD), and maximum description length; saving changes persists them across server restarts
 
-**Plans**: TBD
+**Plans**: 3 plans
+
+  - [ ] 03-01-PLAN.md — YoutarrSeriesImageProvider (poster.jpg → Series Backdrop) + DI + unit tests; TDD (ART-02, ART-04)
+  - [ ] 03-02-PLAN.md — Config page: 3 controls wired to ApiClient + PluginConfiguration fields (PLUG-03)
+  - [ ] 03-03-PLAN.md — Live artwork + config verification: image fixtures + Docker harness + human-verify checkpoint (ART-01, ART-02, ART-03, ART-04, PLUG-03)
+
 **UI hint**: yes
 
 ### Phase 4: Packaging + Distribution
@@ -102,5 +107,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Scaffold + Series Proof | 2/3 | In Progress|  |
 | 2. Episodes + Year-Seasons | 0/4 | Not started | - |
-| 3. Artwork + Configuration Page | 0/TBD | Not started | - |
+| 3. Artwork + Configuration Page | 0/3 | Not started | - |
 | 4. Packaging + Distribution | 0/TBD | Not started | - |
