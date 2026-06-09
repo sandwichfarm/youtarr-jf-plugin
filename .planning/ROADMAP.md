@@ -59,7 +59,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 4 plans
 
   - [ ] 02-01-PLAN.md — Wave 0 live virtual-season probe: stub provider + episode/year fixtures + human-verify checkpoint (LIB-02, LIB-03)
-  - [ ] 02-02-PLAN.md — YoutarrNfoParser + YoutarrVideoData DTO + config fields (numbering scheme, max length); TDD (EPI-01..07, LIB-04)
+  - [x] 02-02-PLAN.md — YoutarrNfoParser + YoutarrVideoData DTO + config fields (numbering scheme, max length); TDD (EPI-01..07, LIB-04)
   - [ ] 02-03-PLAN.md — YoutarrEpisodeNfoProvider NFO→Episode mapping + FindNfoForVideo; TDD (LIB-02/03/04, EPI-01..07, CMP-01/02)
   - [ ] 02-04-PLAN.md — Replace stub with real provider; full-pipeline live verification (LIB-02/03/04, EPI-01, EPI-07, CMP-01/02)
 
@@ -106,6 +106,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Scaffold + Series Proof | 2/3 | In Progress|  |
-| 2. Episodes + Year-Seasons | 0/4 | Not started | - |
+| 2. Episodes + Year-Seasons | 1/4 | In Progress | - |
 | 3. Artwork + Configuration Page | 0/3 | Not started | - |
 | 4. Packaging + Distribution | 0/TBD | Not started | - |

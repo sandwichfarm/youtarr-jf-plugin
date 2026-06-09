@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "01-03 harness built (docker-compose, fixtures, deploy-plugin.sh, README) and DLL staged. PENDING: Task 3 live human-verify — operator must start the Docker daemon (sudo) and run docker compose up to confirm plugin Active + MyChannel Series + __kids suppression."
-last_updated: "2026-06-09T23:20:00.000Z"
-last_activity: 2026-06-09 — 01-03 load-test harness ready (live in-Jellyfin verify pending Docker daemon start)
+stopped_at: "02-02 complete: YoutarrNfoParser + YoutarrVideoData DTO + PluginConfiguration fields (EpisodeNumberingScheme, MaxDescriptionLength) built TDD; full suite 49/49 green in Release. Built ahead of the live Docker checkpoints (01-03 live, 02-01 probe, 02-04 verify) which remain queued for when the operator starts the Docker daemon (sudo)."
+last_updated: "2026-06-09T23:45:00.000Z"
+last_activity: 2026-06-09 — 02-02 NFO parser/DTO + config contract layer complete (49/49 tests green); Docker checkpoints still pending daemon start
 progress:
   total_phases: 4
   completed_phases: 0
@@ -21,30 +21,37 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** A Youtarr download folder shows up in Jellyfin as channels-grouped Shows with year seasons and correct per-video metadata — not a flat undifferentiated wall of videos.
-**Current focus:** Phase 1 — Scaffold + Series Proof
+**Current focus:** Phase 2 — Episodes + Year-Seasons (autonomous unit-testable layer; live Docker checkpoints queued)
 
 ## Current Position
 
-Phase: 1 of 4 (Scaffold + Series Proof)
-Plan: 2 of 3 complete in current phase
+Phase: 2 of 4 (Episodes + Year-Seasons)
+Plan: 1 of 4 complete in current phase (02-02); 02-01/02-03/02-04 remaining
 Status: Executing
-Last activity: 2026-06-09 — Completed 01-02 (path utils, __prefix ignore rule, Series provider; 24 tests green)
+Last activity: 2026-06-09 — Completed 02-02 (YoutarrNfoParser + YoutarrVideoData DTO + config fields; 49 tests green)
 
 Progress: [███████░░░] 67%
+
+> Note: 02-02 was built ahead of the Wave-0 live probe (02-01) per the orchestrator's
+> sequencing note — the parser/DTO/config are pure logic fully covered by unit tests; only
+> the virtual-season CONTAINER mechanism needs the live probe, which is independent of the
+> ParentIndexNumber value this contract layer enables. Docker checkpoints (01-03, 02-01,
+> 02-04) run together once the daemon is up.
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 2
-- Average duration: ~8 min
-- Total execution time: ~0.3 hours
+- Total plans completed: 3
+- Average duration: ~9 min
+- Total execution time: ~0.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 2 of 3 | 16 min | 8 min |
+| 02 | 1 of 4 | ~12 min | ~12 min |
 
 **Recent Trend:**
 
@@ -70,6 +77,11 @@ Recent decisions affecting current work:
 - 01-02: Test project references Jellyfin.Controller/Model WITHOUT ExcludeAssets so MediaBrowser runtime assemblies load at test time (plugin keeps ExcludeAssets; publish stays clean).
 - 01-02: No custom provider Order set — confirm in 01-03 that YoutarrSeriesNfoProvider wins over built-in SeriesNfoProvider; add Order=0 if it doesn't.
 - 01-02 (open for 01-03): Assumption A1 (FileSystemMetadata.Name == bare dir name) still needs live confirmation; one-line fallback to Path.GetFileName(FullName) if wrong.
+- 02-02: NFO parsing isolated from Jellyfin types (same pattern as PathUtils) — YoutarrNfoParser.Parse is pure (file path in, YoutarrVideoData out, no Plugin.Instance), so 02-03's MapToEpisode/FormatDescription can be tested as static methods taking an explicit PluginConfiguration.
+- 02-02: Parser surfaces XmlException on malformed XML (does NOT swallow) — 02-03's YoutarrEpisodeNfoProvider must wrap Parse in try/catch and set HasMetadata=false on failure. Non-<movie> roots return null.
+- 02-02: EPI-07 date guard (IsValidYouTubeDate >=2005, <=now+2) applied to <premiered> only; <dateadded> captured raw on the DTO so 02-03 can implement premiered -> dateadded -> Season 0 fallback.
+- 02-02: DTO Genres/Tags typed IReadOnlyList<string> (init-only) to stay CA2227-clean; 02-03 converts to arrays via .ToArray() as the research MapToEpisode skeleton already does.
+- 02-02: EPI-01..07 / LIB-04 NOT yet marked complete in REQUIREMENTS — the parser/config is the contract layer; these requirements are satisfied end-to-end only once 02-03 maps the DTO onto Episode and 02-04 verifies live.
 
 ### Pending Todos
 
@@ -89,5 +101,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-09
-Stopped at: Completed 01-02-PLAN.md (PathUtils + __prefix ignore rule + Series provider; 24 tests green). Next: 01-03 (live Jellyfin load verification).
+Stopped at: Completed 02-02-PLAN.md (YoutarrNfoParser + YoutarrVideoData DTO + PluginConfiguration EpisodeNumberingScheme/MaxDescriptionLength; TDD; full suite 49/49 green in Release). Next: 02-03 (YoutarrEpisodeNfoProvider NFO→Episode mapping, consumes this DTO) — also pure/unit-testable, can proceed before Docker is up. Live Docker checkpoints (01-03, 02-01, 02-04) remain queued for the operator to run once the daemon is started (sudo).
 Resume file: None
