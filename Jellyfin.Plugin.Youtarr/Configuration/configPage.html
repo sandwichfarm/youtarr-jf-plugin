@@ -5,8 +5,12 @@
     <title>YoutarrMetadata</title>
 </head>
 <body>
-    <div id="YoutarrConfigPage" data-role="page" class="page type-interior pluginConfigurationPage"
-         data-require="emby-input,emby-button,emby-checkbox">
+    <!-- data-role="page" is required — Jellyfin's Dashboard SPA uses this for routing. -->
+    <!-- data-require lists the Emby/Jellyfin web components this page upgrades. -->
+    <div id="YoutarrConfigPage"
+         data-role="page"
+         class="page type-interior pluginConfigurationPage"
+         data-require="emby-input,emby-button,emby-select,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
                 <h1>Youtarr Metadata</h1>
@@ -15,13 +19,117 @@
                     TV Shows library: each YouTube channel folder becomes a Series and each
                     video becomes an Episode.
                 </p>
-                <p>
-                    Configuration settings (year-season grouping, numbering scheme, and more)
-                    will appear here in a later phase. No settings are required for the plugin
-                    to load and resolve channel folders as Series.
-                </p>
+
+                <form id="YoutarrConfigForm">
+
+                    <!-- LIB-03: group episodes into year-based seasons (PluginConfiguration.YearSeasons). -->
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input is="emby-checkbox" type="checkbox"
+                                   id="YearSeasons" name="YearSeasons" />
+                            <span>Group episodes into year-based seasons</span>
+                        </label>
+                        <div class="fieldDescription">
+                            When enabled, episodes are grouped by upload year (e.g. Season 2024).
+                            When disabled, all episodes are placed in a single Season 1.
+                        </div>
+                    </div>
+
+                    <!-- EPI-05: episode numbering scheme (PluginConfiguration.EpisodeNumberingScheme). -->
+                    <!-- Option values MUST match the C# enum member names exactly — the enum -->
+                    <!-- serializes to config XML by name, not by integer (RESEARCH Pitfall 4). -->
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="EpisodeNumberingScheme">
+                            Episode Numbering
+                        </label>
+                        <select is="emby-select"
+                                id="EpisodeNumberingScheme"
+                                name="EpisodeNumberingScheme"
+                                class="emby-select-withcolor emby-select">
+                            <option value="Default">Default (Jellyfin auto-sequences)</option>
+                            <option value="YYYYMMDD">YYYYMMDD (e.g. 20250804 for August 4th, 2025)</option>
+                        </select>
+                        <div class="fieldDescription">
+                            YYYYMMDD encodes the upload date as the episode number.
+                            Note: two videos uploaded on the same day will share an episode number.
+                        </div>
+                    </div>
+
+                    <!-- EPI-04: maximum description length (PluginConfiguration.MaxDescriptionLength, int). -->
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="MaxDescriptionLength">
+                            Max Description Length (characters)
+                        </label>
+                        <input is="emby-input" type="number"
+                               id="MaxDescriptionLength"
+                               name="MaxDescriptionLength"
+                               min="0" />
+                        <div class="fieldDescription">
+                            YouTube descriptions are often very long. Set 0 for no truncation.
+                            Default: 500 characters.
+                        </div>
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="submit"
+                                class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
+
+    <script>
+        /*
+         * Plugin GUID: MUST match Plugin.StaticId exactly — never change between releases.
+         * Source: Jellyfin.Plugin.Youtarr/Plugin.cs StaticId field.
+         */
+        var YoutarrConfig = {
+            pluginUniqueId: '80302d7f-7fc3-4b1c-9a3f-fd85b98b9a69'
+        };
+
+        // PAGE SHOW: load the current configuration from the server and populate the form.
+        document.querySelector('#YoutarrConfigPage')
+            .addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(YoutarrConfig.pluginUniqueId)
+                    .then(function (config) {
+                        document.querySelector('#YearSeasons').checked =
+                            config.YearSeasons;
+                        document.querySelector('#EpisodeNumberingScheme').value =
+                            config.EpisodeNumberingScheme;
+                        document.querySelector('#MaxDescriptionLength').value =
+                            config.MaxDescriptionLength;
+                        Dashboard.hideLoadingMsg();
+                    });
+            });
+
+        // FORM SUBMIT: re-fetch config, apply the form values, and save back to the server.
+        document.querySelector('#YoutarrConfigForm')
+            .addEventListener('submit', function (e) {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(YoutarrConfig.pluginUniqueId)
+                    .then(function (config) {
+                        config.YearSeasons =
+                            document.querySelector('#YearSeasons').checked;
+                        config.EpisodeNumberingScheme =
+                            document.querySelector('#EpisodeNumberingScheme').value;
+                        // MaxDescriptionLength is an int field; .value is always a string,
+                        // so parseInt is required before assigning (RESEARCH Pitfall 5).
+                        config.MaxDescriptionLength =
+                            parseInt(document.querySelector('#MaxDescriptionLength').value, 10);
+
+                        ApiClient.updatePluginConfiguration(
+                            YoutarrConfig.pluginUniqueId, config
+                        ).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                e.preventDefault();
+                return false;
+            });
+    </script>
 </body>
 </html>
