@@ -15,7 +15,7 @@ Requirements for the initial release. Each maps to a roadmap phase.
 
 ### Library Structure (LIB)
 
-- [ ] **LIB-01**: Each Youtarr channel folder appears as a Series in a Jellyfin "Shows" library
+- [x] **LIB-01**: Each Youtarr channel folder appears as a Series in a Jellyfin "Shows" library
 - [ ] **LIB-02**: Each downloaded video appears as an Episode under its channel's Series
 - [ ] **LIB-03**: Episodes are grouped into seasons by upload year by default (e.g. "Season 2025")
 - [ ] **LIB-04**: User can turn year-seasons off to collapse a channel's episodes into a single season
@@ -32,8 +32,8 @@ Requirements for the initial release. Each maps to a roadmap phase.
 
 ### Series Metadata (SER)
 
-- [ ] **SER-01**: Series name is derived from the channel (folder name, falling back to the NFO `<studio>` field)
-- [ ] **SER-02**: Series metadata is synthesized even though Youtarr writes no `tvshow.nfo` (built-in Series NFO provider finds nothing)
+- [x] **SER-01**: Series name is derived from the channel (folder name, falling back to the NFO `<studio>` field)
+- [x] **SER-02**: Series metadata is synthesized even though Youtarr writes no `tvshow.nfo` (built-in Series NFO provider finds nothing)
 
 ### Artwork (ART)
 
@@ -46,7 +46,7 @@ Requirements for the initial release. Each maps to a roadmap phase.
 
 - [ ] **CMP-01**: Plugin works with Youtarr's default flat per-channel folder layout
 - [ ] **CMP-02**: Plugin works with Youtarr's nested per-video subfolder layout
-- [ ] **CMP-03**: Youtarr `__prefix` grouping subfolders do not break Series resolution
+- [x] **CMP-03**: Youtarr `__prefix` grouping subfolders do not break Series resolution
 
 ### Packaging (PKG)
 
@@ -91,7 +91,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | PLUG-01 | Phase 1 | Complete |
 | PLUG-02 | Phase 4 | Pending |
 | PLUG-03 | Phase 3 | Pending |
-| LIB-01 | Phase 1 | Pending |
+| LIB-01 | Phase 1 | Implemented (01-02; live verify 01-03) |
 | LIB-02 | Phase 2 | Pending |
 | LIB-03 | Phase 2 | Pending |
 | LIB-04 | Phase 2 | Pending |
@@ -102,15 +102,15 @@ Which phases cover which requirements. Populated during roadmap creation.
 | EPI-05 | Phase 2 | Pending |
 | EPI-06 | Phase 2 | Pending |
 | EPI-07 | Phase 2 | Pending |
-| SER-01 | Phase 1 | Pending |
-| SER-02 | Phase 1 | Pending |
+| SER-01 | Phase 1 | Implemented (01-02; live verify 01-03) |
+| SER-02 | Phase 1 | Implemented (01-02; live verify 01-03) |
 | ART-01 | Phase 3 | Pending |
 | ART-02 | Phase 3 | Pending |
 | ART-03 | Phase 3 | Pending |
 | ART-04 | Phase 3 | Pending |
 | CMP-01 | Phase 2 | Pending |
 | CMP-02 | Phase 2 | Pending |
-| CMP-03 | Phase 1 | Pending |
+| CMP-03 | Phase 1 | Implemented (01-02; live verify 01-03) |
 | PKG-01 | Phase 4 | Pending |
 | PKG-02 | Phase 4 | Pending |
 

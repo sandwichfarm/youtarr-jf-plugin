@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 01-01-PLAN.md (plugin scaffold). Next: 01-02 (providers + ignore rule)."
-last_updated: "2026-06-09T21:01:07.964Z"
-last_activity: 2026-06-09 — Completed 01-01 (plugin scaffold + packaging descriptor)
+stopped_at: "Completed 01-02-PLAN.md (PathUtils + __prefix ignore rule + Series provider). Next: 01-03 (live Jellyfin load verification)."
+last_updated: "2026-06-09T21:09:00.000Z"
+last_activity: 2026-06-09 — Completed 01-02 (path utils, __prefix ignore rule, Series provider; 24 tests green)
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
-  percent: 33
+  completed_plans: 2
+  percent: 67
 ---
 
 # Project State
@@ -26,25 +26,25 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 1 of 4 (Scaffold + Series Proof)
-Plan: 1 of 3 complete in current phase
+Plan: 2 of 3 complete in current phase
 Status: Executing
-Last activity: 2026-06-09 — Completed 01-01 (plugin scaffold + packaging descriptor)
+Last activity: 2026-06-09 — Completed 01-02 (path utils, __prefix ignore rule, Series provider; 24 tests green)
 
-Progress: [███░░░░░░░] 33%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 1
-- Average duration: ~10 min
-- Total execution time: ~0.2 hours
+- Total plans completed: 2
+- Average duration: ~8 min
+- Total execution time: ~0.3 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 1 of 3 | 10 min | 10 min |
+| 01 | 2 of 3 | 16 min | 8 min |
 
 **Recent Trend:**
 
@@ -65,6 +65,11 @@ Recent decisions affecting current work:
 - Init: Virtual seasons via Episode.ParentIndexNumber — MUST validate against live 10.10.x instance at Phase 2 start before building full pipeline
 - 01-01: Permanent plugin GUID is **80302d7f-7fc3-4b1c-9a3f-fd85b98b9a69** (in Plugin.cs StaticId + build.yaml). Reused by 01-02, 01-03, Phase 4. Never change it.
 - 01-01: DI registration in Jellyfin 10.10.x uses a separate IPluginServiceRegistrator class, NOT a BasePlugin.RegisterServices override (the override does not exist). Wiring deferred to 01-02.
+- 01-02: __prefix ignore rule wired via PluginServiceRegistrator : IPluginServiceRegistrator (AddSingleton<IResolverIgnoreRule, YoutarrPrefixIgnoreRule>).
+- 01-02: IResolverIgnoreRule lives in MediaBrowser.Controller.Resolvers (reflection-verified), not MediaBrowser.Controller.Library as the RESEARCH skeleton's using stated.
+- 01-02: Test project references Jellyfin.Controller/Model WITHOUT ExcludeAssets so MediaBrowser runtime assemblies load at test time (plugin keeps ExcludeAssets; publish stays clean).
+- 01-02: No custom provider Order set — confirm in 01-03 that YoutarrSeriesNfoProvider wins over built-in SeriesNfoProvider; add Order=0 if it doesn't.
+- 01-02 (open for 01-03): Assumption A1 (FileSystemMetadata.Name == bare dir name) still needs live confirmation; one-line fallback to Path.GetFileName(FullName) if wrong.
 
 ### Pending Todos
 
@@ -84,5 +89,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-09
-Stopped at: Completed 01-01-PLAN.md (plugin scaffold + packaging). Next: 01-02 (providers + IResolverIgnoreRule).
+Stopped at: Completed 01-02-PLAN.md (PathUtils + __prefix ignore rule + Series provider; 24 tests green). Next: 01-03 (live Jellyfin load verification).
 Resume file: None
