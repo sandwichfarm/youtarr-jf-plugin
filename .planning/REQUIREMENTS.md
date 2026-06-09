@@ -9,7 +9,7 @@ Requirements for the initial release. Each maps to a roadmap phase.
 
 ### Plugin & Install (PLUG)
 
-- [ ] **PLUG-01**: Plugin loads as "Active" in a Jellyfin 10.10.x dashboard with no load errors
+- [x] **PLUG-01**: Plugin loads as "Active" in a Jellyfin 10.10.x dashboard with no load errors
 - [ ] **PLUG-02**: User can install the plugin by dropping a downloadable ZIP/DLL into the Jellyfin plugins directory
 - [ ] **PLUG-03**: User can open a plugin configuration page in the Jellyfin Dashboard that surfaces all plugin settings
 
@@ -88,7 +88,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| PLUG-01 | Phase 1 | Pending |
+| PLUG-01 | Phase 1 | Complete |
 | PLUG-02 | Phase 4 | Pending |
 | PLUG-03 | Phase 3 | Pending |
 | LIB-01 | Phase 1 | Pending |
@@ -115,6 +115,7 @@ Which phases cover which requirements. Populated during roadmap creation.
 | PKG-02 | Phase 4 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 25 total
 - Mapped to phases: 25 (roadmap complete)
 - Unmapped: 0 ✓

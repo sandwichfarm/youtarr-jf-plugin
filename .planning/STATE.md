@@ -1,3 +1,19 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: executing
+stopped_at: "Completed 01-01-PLAN.md (plugin scaffold). Next: 01-02 (providers + ignore rule)."
+last_updated: "2026-06-09T21:01:07.964Z"
+last_activity: 2026-06-09 — Completed 01-01 (plugin scaffold + packaging descriptor)
+progress:
+  total_phases: 4
+  completed_phases: 0
+  total_plans: 3
+  completed_plans: 1
+  percent: 33
+---
+
 # Project State
 
 ## Project Reference
@@ -10,26 +26,28 @@ See: .planning/PROJECT.md (updated 2026-06-09)
 ## Current Position
 
 Phase: 1 of 4 (Scaffold + Series Proof)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-06-09 — Roadmap created; requirements mapped; ready for phase 1 planning
+Plan: 1 of 3 complete in current phase
+Status: Executing
+Last activity: 2026-06-09 — Completed 01-01 (plugin scaffold + packaging descriptor)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
+
+- Total plans completed: 1
+- Average duration: ~10 min
+- Total execution time: ~0.2 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01 | 1 of 3 | 10 min | 10 min |
 
 **Recent Trend:**
+
 - Last 5 plans: —
 - Trend: —
 
@@ -45,6 +63,8 @@ Recent decisions affecting current work:
 - Init: Use "Shows" library type + built-in SeriesResolver; no custom IItemResolver (officially unsupported in 10.10.x)
 - Init: Target Youtarr flat layout (YOUTARR_SKIP_VIDEO_FOLDER=true) as primary; nested layout as secondary
 - Init: Virtual seasons via Episode.ParentIndexNumber — MUST validate against live 10.10.x instance at Phase 2 start before building full pipeline
+- 01-01: Permanent plugin GUID is **80302d7f-7fc3-4b1c-9a3f-fd85b98b9a69** (in Plugin.cs StaticId + build.yaml). Reused by 01-02, 01-03, Phase 4. Never change it.
+- 01-01: DI registration in Jellyfin 10.10.x uses a separate IPluginServiceRegistrator class, NOT a BasePlugin.RegisterServices override (the override does not exist). Wiring deferred to 01-02.
 
 ### Pending Todos
 
@@ -64,5 +84,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-09
-Stopped at: Roadmap written; REQUIREMENTS.md traceability updated; ready to run /gsd:plan-phase 1
+Stopped at: Completed 01-01-PLAN.md (plugin scaffold + packaging). Next: 01-02 (providers + IResolverIgnoreRule).
 Resume file: None
