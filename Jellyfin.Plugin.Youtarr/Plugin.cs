@@ -42,20 +42,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <inheritdoc />
     public override string Description => "Organizes Youtarr downloads as Series/Season/Episode in Jellyfin.";
 
-    // TODO(plan 01-02): DI registration in Jellyfin 10.10.x is NOT a BasePlugin override.
-    // BasePlugin<T> exposes no RegisterServices method to override. Instead, implement a
-    // separate `IPluginServiceRegistrator` (MediaBrowser.Controller.Plugins) class that
-    // Jellyfin auto-discovers, e.g.:
-    //
-    //   public class PluginServiceRegistrator : IPluginServiceRegistrator
-    //   {
-    //       public void RegisterServices(IServiceCollection services, IServerApplicationHost host)
-    //           => services.AddSingleton<IResolverIgnoreRule, YoutarrPrefixIgnoreRule>();
-    //   }
-    //
-    // YoutarrPrefixIgnoreRule does not exist until plan 01-02, which owns this wiring.
-    // IResolverIgnoreRule implementations are also auto-discovered by Jellyfin's DI, so
-    // explicit registration may be unnecessary — 01-02 verifies which is needed.
+    // DI registration (plan 01-02): in Jellyfin 10.10.x BasePlugin<T> has no RegisterServices
+    // override. YoutarrPrefixIgnoreRule is registered via the separate IPluginServiceRegistrator
+    // implementation in PluginServiceRegistrator.cs, which Jellyfin auto-discovers at startup
+    // (serviceCollection.AddSingleton<IResolverIgnoreRule, YoutarrPrefixIgnoreRule>()).
 
     /// <inheritdoc />
     public IEnumerable<PluginPageInfo> GetPages()
