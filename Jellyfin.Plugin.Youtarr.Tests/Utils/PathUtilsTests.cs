@@ -158,6 +158,77 @@ public class PathUtilsTests
         Assert.Null(PathUtils.FindFirstNfoInFolder(missing));
     }
 
+    // ---- FindNfoForVideo (CMP-01 flat + CMP-02 nested) ----
+
+    [Fact]
+    public void FindNfoForVideo_NfoExists_ReturnsSiblingPath()
+    {
+        // CMP-01 flat layout: Channel/video.mp4 + Channel/video.nfo.
+        var dir = CreateTempDir();
+        try
+        {
+            var video = Path.Combine(dir, "video.mp4");
+            var nfo = Path.Combine(dir, "video.nfo");
+            File.WriteAllText(video, string.Empty);
+            File.WriteAllText(nfo, "<movie></movie>", Encoding.UTF8);
+
+            var found = PathUtils.FindNfoForVideo(video);
+            Assert.Equal(nfo, found);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void FindNfoForVideo_NfoMissing_ReturnsNull()
+    {
+        var dir = CreateTempDir();
+        try
+        {
+            var video = Path.Combine(dir, "video.mp4");
+            File.WriteAllText(video, string.Empty);
+
+            Assert.Null(PathUtils.FindNfoForVideo(video));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void FindNfoForVideo_NestedLayout_ResolvesCorrectly()
+    {
+        // CMP-02 nested layout: Channel/Title/Title.mp4 + Channel/Title/Title.nfo.
+        var root = CreateTempDir();
+        try
+        {
+            var nested = Path.Combine(root, "MyChannel", "My Video Title");
+            Directory.CreateDirectory(nested);
+            var video = Path.Combine(nested, "My Video Title.mp4");
+            var nfo = Path.Combine(nested, "My Video Title.nfo");
+            File.WriteAllText(video, string.Empty);
+            File.WriteAllText(nfo, "<movie></movie>", Encoding.UTF8);
+
+            var found = PathUtils.FindNfoForVideo(video);
+            Assert.Equal(nfo, found);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void FindNfoForVideo_NullInput_ReturnsNull()
+    {
+        Assert.Null(PathUtils.FindNfoForVideo(null));
+        Assert.Null(PathUtils.FindNfoForVideo(string.Empty));
+        Assert.Null(PathUtils.FindNfoForVideo("   "));
+    }
+
     private static string CreateTempDir()
     {
         var dir = Path.Combine(Path.GetTempPath(), "youtarr-tests-" + Guid.NewGuid().ToString("N"));
