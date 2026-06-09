@@ -58,6 +58,28 @@ public static class PathUtils
     }
 
     /// <summary>
+    /// Resolves the co-located <c>.nfo</c> sidecar for a video file: the same-basename
+    /// <c>.nfo</c> in the same directory. This works identically for both Youtarr layouts —
+    /// flat (<c>Channel/video.mp4</c> + <c>Channel/video.nfo</c>, CMP-01) and nested
+    /// (<c>Channel/Title/Title.mp4</c> + <c>Channel/Title/Title.nfo</c>, CMP-02) — because both
+    /// place the NFO next to the video with a matching base name. Returns <see langword="null"/>
+    /// for null/empty/whitespace input or when no sidecar exists. Pure: the only side effect is
+    /// the <see cref="File.Exists(string)"/> probe.
+    /// </summary>
+    /// <param name="videoPath">Full path to the video file.</param>
+    /// <returns>The sibling <c>.nfo</c> path when present, otherwise <see langword="null"/>.</returns>
+    public static string? FindNfoForVideo(string? videoPath)
+    {
+        if (string.IsNullOrWhiteSpace(videoPath))
+        {
+            return null;
+        }
+
+        var nfoPath = Path.ChangeExtension(videoPath, ".nfo");
+        return File.Exists(nfoPath) ? nfoPath : null;
+    }
+
+    /// <summary>
     /// Reads the <c>&lt;studio&gt;</c> element from a Youtarr <c>&lt;movie&gt;</c>-rooted NFO,
     /// returning its trimmed text. Any error (missing file, malformed XML, missing element)
     /// yields <see langword="null"/> — never throws, so a single bad NFO cannot crash a scan.
