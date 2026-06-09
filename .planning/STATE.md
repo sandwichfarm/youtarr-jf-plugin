@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "02-03 complete: YoutarrEpisodeNfoProvider (ILocalMetadataProvider<Episode>) + PathUtils.FindNfoForVideo built TDD; full suite 80/80 green in Release, publish DLL-only. The autonomous unit-testable Episode pipeline is now complete (parser+DTO+config+provider). Live Docker checkpoints (01-03 live, 02-01 probe, 02-04 verify) remain queued for when the operator starts the Docker daemon (sudo)."
-last_updated: "2026-06-10T00:10:00.000Z"
-last_activity: 2026-06-10 — 02-03 YoutarrEpisodeNfoProvider + FindNfoForVideo complete (80/80 tests green); Docker checkpoints still pending daemon start
+stopped_at: "03-01 complete: YoutarrSeriesImageProvider (ILocalImageProvider) surfaces channel poster.jpg as ImageType.Backdrop (ART-02), returns empty enumerable when poster.jpg absent (ART-04); Backdrop-only (built-in owns Series Primary), explicit DI safety-net registration, built TDD. Full suite 85/85 green in Release, publish DLL-only. This is the only custom artwork code in Phase 3. Live Docker checkpoints (01-03 live, 02-01 probe, 02-04 verify, 03-03 artwork+config verify) remain queued for when the operator starts the Docker daemon (sudo)."
+last_updated: "2026-06-10T00:25:00.000Z"
+last_activity: 2026-06-10 — 03-01 YoutarrSeriesImageProvider (poster.jpg → Backdrop) complete (85/85 tests green); Docker checkpoints still pending daemon start
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 4
-  completed_plans: 3
-  percent: 75
+  total_plans: 14
+  completed_plans: 5
+  percent: 36
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-09)
 
 **Core value:** A Youtarr download folder shows up in Jellyfin as channels-grouped Shows with year seasons and correct per-video metadata — not a flat undifferentiated wall of videos.
-**Current focus:** Phase 2 — Episodes + Year-Seasons (autonomous unit-testable layer; live Docker checkpoints queued)
+**Current focus:** Phase 3 — Artwork + Configuration Page (custom artwork code done; config page + live verify remaining)
 
 ## Current Position
 
-Phase: 2 of 4 (Episodes + Year-Seasons)
-Plan: 2 of 4 complete in current phase (02-02, 02-03); 02-01/02-04 (live Docker) remaining
+Phase: 3 of 4 (Artwork + Configuration Page)
+Plan: 1 of 3 complete in current phase (03-01); 03-02 (config page) + 03-03 (live verify) remaining. Phase 1/2 live Docker checkpoints (01-03, 02-01, 02-04) also still queued.
 Status: Executing
-Last activity: 2026-06-10 — Completed 02-03 (YoutarrEpisodeNfoProvider NFO→Episode + FindNfoForVideo; 80 tests green)
+Last activity: 2026-06-10 — Completed 03-01 (YoutarrSeriesImageProvider poster.jpg → Backdrop, ART-02/ART-04; 85 tests green)
 
-Progress: [████████░░] 75%
+Progress: [███░░░░░░░] 36%
 
 > Note: 02-02 was built ahead of the Wave-0 live probe (02-01) per the orchestrator's
 > sequencing note — the parser/DTO/config are pure logic fully covered by unit tests; only
@@ -42,9 +42,9 @@ Progress: [████████░░] 75%
 
 **Velocity:**
 
-- Total plans completed: 4
-- Average duration: ~9 min
-- Total execution time: ~0.6 hours
+- Total plans completed: 5
+- Average duration: ~8 min
+- Total execution time: ~0.7 hours
 
 **By Phase:**
 
@@ -52,6 +52,7 @@ Progress: [████████░░] 75%
 |-------|-------|-------|----------|
 | 01 | 2 of 3 | 16 min | 8 min |
 | 02 | 2 of 4 | ~22 min | ~11 min |
+| 03 | 1 of 3 | ~5 min | ~5 min |
 
 **Recent Trend:**
 
@@ -86,6 +87,11 @@ Recent decisions affecting current work:
 - 02-03: EPI-07 chain realized as premiered→dateadded→Season 0 — when <premiered> invalid/missing but DateAdded valid, PremiereDate=DateAdded (episode keeps a date) while ParentIndexNumber=0/IndexNumber=null route the SEASON to Season 0. Download date never sets the year (T-02-10).
 - 02-03: No explicit DI registration for YoutarrEpisodeNfoProvider — auto-discovery (Pitfall 7), same as YoutarrSeriesNfoProvider. 02-04 live probe decides whether explicit registration / provider Order is needed.
 - 02-03: EPI/LIB/CMP requirements STILL marked Pending in REQUIREMENTS — unit-proven here but checked off only after 02-04 live verify confirms ParentIndexNumber/virtual-season behaviour end-to-end (continuing the 02-02 deferral decision).
+- 03-01: ART-01 (Series Primary) and ART-03 (Episode thumbnail) need NO custom code — the built-in LocalImageProvider / EpisodeLocalImageProvider already cover them. The ONLY custom artwork class is YoutarrSeriesImageProvider for ART-02 (Series Backdrop), since Youtarr writes no fanart/backdrop file.
+- 03-01: YoutarrSeriesImageProvider returns poster.jpg as ImageType.Backdrop ONLY — never Primary (built-in owns Primary at Order=0; re-emitting risks rescan flicker, Pitfall 1). Asserted by GetImages_SeriesWithPoster_NeverEmitsPrimary.
+- 03-01: GetImages yield-breaks (empty enumerable, LogDebug, no throw) when poster.jpg absent (ART-04). LocalImageInfo.FileInfo = new FileSystemMetadata { FullName = posterPath } (FullName is all the pipeline needs, mirrors built-in EpisodeLocalImageProvider).
+- 03-01: Explicit AddSingleton<ILocalImageProvider, YoutarrSeriesImageProvider>() added as a conservative DI safety net (mirrors IResolverIgnoreRule precedent); no custom Order. 03-03 live verify decides whether auto-discovery makes it redundant / whether an Order is needed.
+- 03-01: ART-02/ART-04 left Pending in REQUIREMENTS — unit-proven here, checked off only after 03-03 live artwork verify (continuing the 02-02/02-03 deferral convention). Portrait poster as 16:9 backdrop is an accepted, documented visual tradeoff.
 
 ### Pending Todos
 
@@ -105,5 +111,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-06-10
-Stopped at: Completed 02-03-PLAN.md (YoutarrEpisodeNfoProvider NFO→Episode mapping + PathUtils.FindNfoForVideo; TDD; full suite 80/80 green in Release, publish DLL-only). The entire autonomous unit-testable Episode pipeline (parser + DTO + config + provider) is now built. Next: the live Docker checkpoints — 02-01 (virtual-season probe) and 02-04 (replace stub with real provider + full-pipeline live verify), plus 01-03 — which require the operator to start the Docker daemon (sudo). 02-04 also decides whether explicit DI registration is needed.
+Stopped at: Completed 03-01-PLAN.md (YoutarrSeriesImageProvider — ILocalImageProvider surfacing channel poster.jpg as ImageType.Backdrop for ART-02, empty enumerable when absent for ART-04; Backdrop-only, explicit DI safety-net registration; TDD; full suite 85/85 green in Release, publish DLL-only). This is the only custom artwork code in Phase 3 — ART-01/ART-03 are handled by Jellyfin's built-in providers. Next: 03-02 (config page: 3 controls wired to ApiClient + PluginConfiguration, PLUG-03), then the live Docker checkpoints — 03-03 (artwork + config live verify), plus the still-queued 01-03 / 02-01 / 02-04 — which require the operator to start the Docker daemon (sudo).
 Resume file: None
