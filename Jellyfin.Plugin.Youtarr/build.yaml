@@ -13,4 +13,7 @@ owner: "sandwich"
 artifacts:
   - "Jellyfin.Plugin.Youtarr.dll"
 changelog: >
-  Phase 1: Plugin loads cleanly; channel folders resolve as correctly-named Series.
+  Initial release v1.0.0.0. Channel folders resolve as Series; videos resolve as
+  Episodes grouped into year seasons. Per-video NFO metadata (title, plot, premiere
+  date, genres, tags, YouTube ID). Channel artwork as Series poster and backdrop.
+  Plugin configuration page with year-seasons toggle. File-only — no API key required.
