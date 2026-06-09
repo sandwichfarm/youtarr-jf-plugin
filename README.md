@@ -55,11 +55,11 @@ Youtarr organizes downloads one folder per channel:
 
 ```
 /youtube/                     ← point your library here
-├─ Itchy Boots/
+├─ Example Channel/
 │  ├─ poster.jpg              ← becomes the Series poster + backdrop
-│  ├─ I got stopped … [D3alKgbEn5A].mp4
-│  ├─ I got stopped … [D3alKgbEn5A].nfo   ← per-video metadata
-│  └─ I got stopped … [D3alKgbEn5A].jpg   ← becomes the Episode thumbnail
+│  ├─ My First Video [aBcdEfGhIjk].mp4
+│  ├─ My First Video [aBcdEfGhIjk].nfo   ← per-video metadata
+│  └─ My First Video [aBcdEfGhIjk].jpg   ← becomes the Episode thumbnail
 └─ Another Channel/
    └─ …
 ```
