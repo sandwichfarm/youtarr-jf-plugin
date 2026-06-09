@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+
+# Publish / packaging output
+dist/
+
+# Temporary build artifacts
+*.tmp
+*.user
+*.suo
+.vs/
+
+# jprm packaging output
+*.zip
+manifest.json

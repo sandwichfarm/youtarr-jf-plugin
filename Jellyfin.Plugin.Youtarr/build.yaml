@@ -1,0 +1,16 @@
+name: "YoutarrMetadata"
+guid: "80302d7f-7fc3-4b1c-9a3f-fd85b98b9a69"
+version: "1.0.0.0"
+targetAbi: "10.10.0.0"
+framework: "net8.0"
+overview: "Organizes Youtarr downloads as Series/Season/Episode in Jellyfin"
+description: >
+  Maps a Youtarr channel download folder into a Jellyfin TV Shows library.
+  Each YouTube channel folder becomes a Series; videos become Episodes grouped
+  by upload year. Reads metadata from Youtarr NFO files. No API key required.
+category: "Metadata"
+owner: "sandwich"
+artifacts:
+  - "Jellyfin.Plugin.Youtarr.dll"
+changelog: >
+  Phase 1: Plugin loads cleanly; channel folders resolve as correctly-named Series.

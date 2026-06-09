@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>Jellyfin.Plugin.Youtarr</AssemblyName>
+    <RootNamespace>Jellyfin.Plugin.Youtarr</RootNamespace>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ExcludeAssets=runtime is CRITICAL: prevents Jellyfin runtime DLLs from
+         being bundled in the plugin ZIP. Without this, the server finds duplicate
+         assemblies and the plugin fails with TypeLoadException. -->
+    <PackageReference Include="Jellyfin.Controller" Version="10.10.7">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+    <PackageReference Include="Jellyfin.Model" Version="10.10.7">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Embedded config page HTML -->
+    <EmbeddedResource Include="Configuration/configPage.html" />
+  </ItemGroup>
+
+</Project>
