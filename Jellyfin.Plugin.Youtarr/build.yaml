@@ -1,6 +1,6 @@
 name: "YoutarrMetadata"
 guid: "80302d7f-7fc3-4b1c-9a3f-fd85b98b9a69"
-version: "1.0.0.0"
+version: "1.0.1.0"
 targetAbi: "10.10.0.0"
 framework: "net8.0"
 overview: "Organizes Youtarr downloads as Series/Season/Episode in Jellyfin"
@@ -13,7 +13,13 @@ owner: "sandwichfarm"
 artifacts:
   - "Jellyfin.Plugin.Youtarr.dll"
 changelog: >
-  Initial release v1.0.0.0. Channel folders resolve as Series; videos resolve as
+  v1.0.1.0 — Providers now self-gate to Youtarr channel folders only. The Series-name
+  and channel-backdrop providers previously acted on every Series in every library;
+  they now activate only when a folder contains a Youtarr <movie> NFO with a YouTube ID,
+  so other libraries (regular TV, movies, anime) are left untouched even when the plugin
+  is enabled globally. No behavior change for genuine Youtarr channels.
+
+  v1.0.0.0 — Initial release. Channel folders resolve as Series; videos resolve as
   Episodes grouped into year seasons. Per-video NFO metadata (title, plot, premiere
   date, genres, tags, YouTube ID). Channel artwork as Series poster and backdrop.
   Plugin configuration page with year-seasons toggle. File-only — no API key required.

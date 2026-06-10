@@ -4,6 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>Jellyfin.Plugin.Youtarr</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.Youtarr</RootNamespace>
+    <!-- Keep in sync with build.yaml version (Jellyfin reads the plugin version from meta.json/build.yaml). -->
+    <Version>1.0.1.0</Version>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

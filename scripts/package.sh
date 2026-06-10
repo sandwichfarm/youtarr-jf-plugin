@@ -51,7 +51,13 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 PLUGIN_DIR="${REPO_ROOT}/Jellyfin.Plugin.Youtarr"
 DIST_DIR="${REPO_ROOT}/dist"
-VERSION="1.0.0.0"
+
+# Single source of truth for the version: build.yaml. Bump it there only.
+VERSION="$(grep -E '^version:' "${PLUGIN_DIR}/build.yaml" | head -1 | sed -E 's/^version:[[:space:]]*"?([^"]+)"?[[:space:]]*$/\1/')"
+if [[ -z "${VERSION}" ]]; then
+  echo "ERROR: could not read version from ${PLUGIN_DIR}/build.yaml" >&2
+  exit 1
+fi
 
 # --- Derive the canonical https repo URL ------------------------------------
 # Precedence: explicit REPO_URL env (used by CI) > git origin > project default.
