@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movie>
+  <title>An Older Clip From 2023</title>
+  <studio>My YouTube Channel</studio>
+  <premiered>2023-07-02</premiered>
+  <plot>A second video on the same channel, uploaded in a different year, to prove year-based season grouping.</plot>
+  <genre>Education</genre>
+  <uniqueid type="youtube">aBcdEfGhIjk</uniqueid>
+</movie>
