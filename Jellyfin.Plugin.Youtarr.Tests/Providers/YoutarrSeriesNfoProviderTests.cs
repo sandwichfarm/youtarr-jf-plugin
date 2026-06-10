@@ -43,6 +43,9 @@ public class YoutarrSeriesNfoProviderTests
         var dir = CreateTempDir();
         try
         {
+            // A genuine Youtarr channel folder: a <movie> NFO with a youtube uniqueid present.
+            WriteYoutarrNfo(Path.Combine(dir, "video.nfo"));
+
             var provider = CreateProvider();
             var info = ItemInfoForPath(dir);
 
@@ -64,6 +67,8 @@ public class YoutarrSeriesNfoProviderTests
         var dir = CreateTempDir();
         try
         {
+            WriteYoutarrNfo(Path.Combine(dir, "video.nfo"));
+
             var provider = CreateProvider();
             var info = ItemInfoForPath(dir + Path.DirectorySeparatorChar);
 
@@ -86,9 +91,10 @@ public class YoutarrSeriesNfoProviderTests
         var dir = CreateTempDir();
         try
         {
+            // Youtarr channel: <movie> NFO with a youtube uniqueid AND a differing studio.
             File.WriteAllText(
                 Path.Combine(dir, "video.nfo"),
-                "<?xml version=\"1.0\" encoding=\"utf-8\"?><movie><studio>A Different Studio Name</studio></movie>",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?><movie><uniqueid type=\"youtube\">dQw4w9WgXcQ</uniqueid><studio>A Different Studio Name</studio></movie>",
                 Encoding.UTF8);
 
             var provider = CreateProvider();
@@ -109,10 +115,12 @@ public class YoutarrSeriesNfoProviderTests
     [Fact]
     public async Task GetMetadata_MalformedNfo_DoesNotThrow_FolderNameWins()
     {
-        // T-01-03: a malformed NFO must not crash the scan.
+        // T-01-03: a malformed NFO must not crash the scan. The folder is still a genuine Youtarr
+        // channel (a valid Youtarr NFO is present alongside the broken one).
         var dir = CreateTempDir();
         try
         {
+            WriteYoutarrNfo(Path.Combine(dir, "video.nfo"));
             File.WriteAllText(Path.Combine(dir, "broken.nfo"), "<not valid xml", Encoding.UTF8);
 
             var provider = CreateProvider();
@@ -122,6 +130,32 @@ public class YoutarrSeriesNfoProviderTests
 
             Assert.True(result.HasMetadata);
             Assert.Equal(Path.GetFileName(dir), result.Item!.Name);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task GetMetadata_NonYoutarrSeriesFolder_HasMetadataFalse_DoesNotClaim()
+    {
+        // BUG FIX: a regular TV/anime Series folder that is NOT a Youtarr channel must be left
+        // untouched. Even with a non-Youtarr NFO present, the provider must not claim the Series.
+        var dir = CreateTempDir();
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(dir, "tvshow.nfo"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?><tvshow><title>Some Anime</title></tvshow>",
+                Encoding.UTF8);
+
+            var provider = CreateProvider();
+            var info = ItemInfoForPath(dir);
+
+            var result = await provider.GetMetadata(info, _directoryService.Object, CancellationToken.None);
+
+            Assert.False(result.HasMetadata);
         }
         finally
         {
@@ -149,6 +183,18 @@ public class YoutarrSeriesNfoProviderTests
         var result = await provider.GetMetadata(info, _directoryService.Object, CancellationToken.None);
 
         Assert.False(result.HasMetadata);
+    }
+
+    /// <summary>
+    /// Writes a minimal Youtarr <c>&lt;movie&gt;</c> NFO with a youtube uniqueid — the evidence that
+    /// makes the enclosing folder a genuine Youtarr channel.
+    /// </summary>
+    private static void WriteYoutarrNfo(string path)
+    {
+        File.WriteAllText(
+            path,
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><movie><title>A Video</title><uniqueid type=\"youtube\">dQw4w9WgXcQ</uniqueid></movie>",
+            Encoding.UTF8);
     }
 
     private static string CreateTempDir()

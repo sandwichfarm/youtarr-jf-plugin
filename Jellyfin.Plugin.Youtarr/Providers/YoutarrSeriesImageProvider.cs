@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Jellyfin.Plugin.Youtarr.Utils;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Providers;
@@ -10,11 +11,15 @@ using Microsoft.Extensions.Logging;
 namespace Jellyfin.Plugin.Youtarr.Providers;
 
 /// <summary>
-/// Supplements Jellyfin's built-in <c>LocalImageProvider</c> for Series items.
-/// The built-in already picks up <c>poster.jpg</c> as the Series Primary image (ART-01),
-/// so this provider's ONLY responsibility is ART-02: returning that same <c>poster.jpg</c>
-/// as <see cref="ImageType.Backdrop"/>, since Youtarr writes no separate fanart/backdrop file.
-/// It deliberately never emits a Primary image — competing with the built-in
+/// Supplements Jellyfin's built-in <c>LocalImageProvider</c> for Series items that belong to an
+/// actual Youtarr channel folder <em>only</em>. Image providers are global, so this provider
+/// self-gates via <see cref="PathUtils.IsYoutarrChannelFolder(string?)"/> and emits nothing for
+/// any Series outside a Youtarr channel — it will never force a regular library's
+/// <c>poster.jpg</c> to appear as a Backdrop.
+/// For genuine Youtarr channels, the built-in already picks up <c>poster.jpg</c> as the Series
+/// Primary image (ART-01), so this provider's ONLY responsibility is ART-02: returning that same
+/// <c>poster.jpg</c> as <see cref="ImageType.Backdrop"/>, since Youtarr writes no separate
+/// fanart/backdrop file. It deliberately never emits a Primary image — competing with the built-in
 /// for Primary risks image flicker on rescans (RESEARCH Pitfall 1). When <c>poster.jpg</c> is
 /// absent it returns an empty enumerable and never throws (ART-04).
 /// </summary>
@@ -40,6 +45,13 @@ public class YoutarrSeriesImageProvider : ILocalImageProvider
     /// <inheritdoc />
     public IEnumerable<LocalImageInfo> GetImages(BaseItem item, IDirectoryService directoryService)
     {
+        // Self-gate: image providers are global. Emit nothing unless this Series is an actual
+        // Youtarr channel folder — never force another library's poster.jpg to become a Backdrop.
+        if (!PathUtils.IsYoutarrChannelFolder(item.Path))
+        {
+            yield break;
+        }
+
         var posterPath = Path.Combine(item.Path, "poster.jpg");
         if (!File.Exists(posterPath))
         {

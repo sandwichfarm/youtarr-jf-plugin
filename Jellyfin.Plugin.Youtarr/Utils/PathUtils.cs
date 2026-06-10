@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Jellyfin.Plugin.Youtarr.Parsers;
 
 namespace Jellyfin.Plugin.Youtarr.Utils;
 
@@ -104,6 +105,95 @@ public static class PathUtils
         {
             // Attacker-influenceable input (T-01-03): swallow all parse/IO errors to null.
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Determines whether <paramref name="channelPath"/> is an actual Youtarr channel folder, so the
+    /// Series-level providers can self-gate and never claim Series in a user's other Jellyfin
+    /// libraries. A folder qualifies when it — or one of its immediate child subdirectories, to
+    /// cover both the flat (CMP-01) and nested (CMP-02) Youtarr layouts — contains at least one
+    /// <c>.nfo</c> file that <see cref="YoutarrNfoParser.Parse(string)"/> resolves to a non-null
+    /// Youtarr <c>&lt;movie&gt;</c> NFO carrying a non-empty <c>YouTubeId</c>. Requiring the YouTube id
+    /// avoids matching arbitrary <c>&lt;movie&gt;</c> NFOs from a movie library.
+    /// <para>The scan is bounded and cheap: it checks the top-level <c>.nfo</c> files first, returning
+    /// on the first match, then descends exactly one level into immediate subdirectories — never
+    /// deeper. Any IO/parse error is swallowed to <see langword="false"/>, consistent with the other
+    /// helpers, so a single bad NFO can never crash a library scan. Null/empty/whitespace or a
+    /// nonexistent path yields <see langword="false"/>.</para>
+    /// </summary>
+    /// <param name="channelPath">The candidate channel folder path.</param>
+    /// <returns><see langword="true"/> when the folder is a Youtarr channel; otherwise <see langword="false"/>.</returns>
+    public static bool IsYoutarrChannelFolder(string? channelPath)
+    {
+        if (string.IsNullOrWhiteSpace(channelPath) || !Directory.Exists(channelPath))
+        {
+            return false;
+        }
+
+        try
+        {
+            // Flat layout (CMP-01): NFOs sit directly in the channel folder.
+            if (FolderContainsYoutarrNfo(channelPath))
+            {
+                return true;
+            }
+
+            // Nested layout (CMP-02): NFOs sit one level down, in per-video subdirectories.
+            foreach (var subDir in Directory.EnumerateDirectories(channelPath))
+            {
+                if (FolderContainsYoutarrNfo(subDir))
+                {
+                    return true;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Scans the top-level <c>.nfo</c> files of <paramref name="folderPath"/> for a Youtarr
+    /// <c>&lt;movie&gt;</c> NFO with a non-empty YouTube id. Never recurses; never throws.
+    /// </summary>
+    private static bool FolderContainsYoutarrNfo(string folderPath)
+    {
+        try
+        {
+            foreach (var nfoPath in Directory.EnumerateFiles(folderPath, "*.nfo", SearchOption.TopDirectoryOnly))
+            {
+                if (IsYoutarrNfo(nfoPath))
+                {
+                    return true;
+                }
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when the NFO parses to a Youtarr <c>&lt;movie&gt;</c> with a
+    /// non-empty YouTube id. Swallows any parse/IO error to <see langword="false"/>.
+    /// </summary>
+    private static bool IsYoutarrNfo(string nfoPath)
+    {
+        try
+        {
+            var data = YoutarrNfoParser.Parse(nfoPath);
+            return data is not null && !string.IsNullOrWhiteSpace(data.YouTubeId);
+        }
+        catch
+        {
+            return false;
         }
     }
 }

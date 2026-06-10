@@ -10,11 +10,15 @@ using Microsoft.Extensions.Logging;
 namespace Jellyfin.Plugin.Youtarr.Providers;
 
 /// <summary>
-/// Provides Series metadata for Youtarr channel folders.
+/// Provides Series metadata for Youtarr channel folders <em>only</em>. Because Jellyfin metadata
+/// providers are always global, this provider first self-gates via
+/// <see cref="PathUtils.IsYoutarrChannelFolder(string?)"/> and no-ops on any Series whose folder is
+/// not an actual Youtarr channel — so it never claims Series in a user's other (TV/anime/movie)
+/// libraries.
 /// Jellyfin's built-in SeriesNfoProvider looks for <c>tvshow.nfo</c>, which Youtarr does not write.
-/// This provider synthesizes Series metadata from the channel folder name (SER-01/SER-02) and,
-/// as a best-effort confirmation, reads the <c>&lt;studio&gt;</c> field of the first video NFO in
-/// the folder. The folder name always wins as the Series name.
+/// For genuine Youtarr channels this provider synthesizes Series metadata from the channel folder
+/// name (SER-01/SER-02) and, as a best-effort confirmation, reads the <c>&lt;studio&gt;</c> field of
+/// the first video NFO in the folder. The folder name always wins as the Series name.
 /// </summary>
 public class YoutarrSeriesNfoProvider : ILocalMetadataProvider<Series>, IHasItemChangeMonitor
 {
@@ -40,6 +44,14 @@ public class YoutarrSeriesNfoProvider : ILocalMetadataProvider<Series>, IHasItem
     {
         var result = new MetadataResult<Series>();
         var channelPath = info.Path;
+
+        // Self-gate: providers are global, so confirm this is an actual Youtarr channel folder
+        // before claiming the Series. Otherwise leave it to Jellyfin's built-in/online providers
+        // and do not over-reach into the user's other libraries.
+        if (!PathUtils.IsYoutarrChannelFolder(channelPath))
+        {
+            return Task.FromResult(result); // HasMetadata stays false
+        }
 
         // Primary, authoritative source: the channel folder name. No file I/O required.
         var channelName = PathUtils.GetChannelNameFromPath(channelPath);

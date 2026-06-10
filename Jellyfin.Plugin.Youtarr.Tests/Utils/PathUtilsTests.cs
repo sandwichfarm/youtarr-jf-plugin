@@ -229,6 +229,120 @@ public class PathUtilsTests
         Assert.Null(PathUtils.FindNfoForVideo("   "));
     }
 
+    // ---- IsYoutarrChannelFolder ----
+
+    [Fact]
+    public void IsYoutarrChannelFolder_FlatLayoutWithYoutarrNfo_ReturnsTrue()
+    {
+        // CMP-01 flat layout: a Youtarr <movie> NFO (with a youtube uniqueid) lives directly
+        // in the channel folder.
+        var dir = CreateTempDir();
+        try
+        {
+            WriteYoutarrNfo(Path.Combine(dir, "video.nfo"), "dQw4w9WgXcQ");
+            Assert.True(PathUtils.IsYoutarrChannelFolder(dir));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void IsYoutarrChannelFolder_NestedLayoutWithYoutarrNfo_ReturnsTrue()
+    {
+        // CMP-02 nested layout: the Youtarr NFO sits one level down in a per-video subdirectory.
+        var dir = CreateTempDir();
+        try
+        {
+            var nested = Path.Combine(dir, "My Video Title");
+            Directory.CreateDirectory(nested);
+            WriteYoutarrNfo(Path.Combine(nested, "My Video Title.nfo"), "abc123XYZ_-");
+            Assert.True(PathUtils.IsYoutarrChannelFolder(dir));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void IsYoutarrChannelFolder_EpisodedetailsNfo_ReturnsFalse()
+    {
+        // A non-Youtarr NFO (<episodedetails>) parses to null → not a Youtarr channel.
+        var dir = CreateTempDir();
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(dir, "episode.nfo"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?><episodedetails><title>Some TV Show</title></episodedetails>",
+                Encoding.UTF8);
+            Assert.False(PathUtils.IsYoutarrChannelFolder(dir));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void IsYoutarrChannelFolder_MovieNfoWithoutYouTubeId_ReturnsFalse()
+    {
+        // A plain <movie> NFO from a movie library has no youtube id → not a Youtarr channel.
+        var dir = CreateTempDir();
+        try
+        {
+            File.WriteAllText(
+                Path.Combine(dir, "movie.nfo"),
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?><movie><title>The Matrix</title><studio>Warner Bros</studio></movie>",
+                Encoding.UTF8);
+            Assert.False(PathUtils.IsYoutarrChannelFolder(dir));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void IsYoutarrChannelFolder_EmptyFolder_ReturnsFalse()
+    {
+        var dir = CreateTempDir();
+        try
+        {
+            Assert.False(PathUtils.IsYoutarrChannelFolder(dir));
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void IsYoutarrChannelFolder_NullOrNonExistentPath_ReturnsFalse_NoThrow()
+    {
+        Assert.False(PathUtils.IsYoutarrChannelFolder(null));
+        Assert.False(PathUtils.IsYoutarrChannelFolder(string.Empty));
+        Assert.False(PathUtils.IsYoutarrChannelFolder("   "));
+
+        var missing = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Assert.False(PathUtils.IsYoutarrChannelFolder(missing));
+    }
+
+    /// <summary>
+    /// Writes a minimal Youtarr <c>&lt;movie&gt;</c> NFO carrying a <c>&lt;uniqueid type="youtube"&gt;</c>,
+    /// the on-disk evidence that marks a folder as a Youtarr channel.
+    /// </summary>
+    private static void WriteYoutarrNfo(string path, string youTubeId)
+    {
+        File.WriteAllText(
+            path,
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<movie>\n  <title>A Video</title>\n  <uniqueid type=\"youtube\">"
+                + youTubeId
+                + "</uniqueid>\n</movie>",
+            Encoding.UTF8);
+    }
+
     private static string CreateTempDir()
     {
         var dir = Path.Combine(Path.GetTempPath(), "youtarr-tests-" + Guid.NewGuid().ToString("N"));

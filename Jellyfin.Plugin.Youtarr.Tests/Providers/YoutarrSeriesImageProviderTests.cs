@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Jellyfin.Plugin.Youtarr;
 using Jellyfin.Plugin.Youtarr.Providers;
 using MediaBrowser.Controller.Entities.Movies;
@@ -28,12 +29,13 @@ public class YoutarrSeriesImageProviderTests
     private YoutarrSeriesImageProvider CreateProvider() => new(_logger.Object);
 
     [Fact]
-    public void GetImages_SeriesWithPoster_ReturnsSingleBackdrop()
+    public void GetImages_YoutarrChannelWithPoster_ReturnsSingleBackdrop()
     {
-        // ART-02: a real poster.jpg in the Series folder is surfaced as a Backdrop image.
+        // ART-02: in a genuine Youtarr channel folder, poster.jpg is surfaced as a Backdrop image.
         var dir = CreateTempDir();
         try
         {
+            WriteYoutarrNfo(Path.Combine(dir, "video.nfo"));
             var posterPath = Path.Combine(dir, "poster.jpg");
             File.WriteAllBytes(posterPath, new byte[] { 0xFF, 0xD8, 0xFF, 0xD9 });
 
@@ -54,13 +56,14 @@ public class YoutarrSeriesImageProviderTests
     }
 
     [Fact]
-    public void GetImages_SeriesWithPoster_NeverEmitsPrimary()
+    public void GetImages_YoutarrChannelWithPoster_NeverEmitsPrimary()
     {
         // ART-02 boundary: the built-in LocalImageProvider owns Series Primary. This provider must
         // not compete — no emitted image may carry ImageType.Primary.
         var dir = CreateTempDir();
         try
         {
+            WriteYoutarrNfo(Path.Combine(dir, "video.nfo"));
             File.WriteAllBytes(Path.Combine(dir, "poster.jpg"), new byte[] { 0xFF, 0xD8, 0xFF, 0xD9 });
 
             var provider = CreateProvider();
@@ -77,12 +80,37 @@ public class YoutarrSeriesImageProviderTests
     }
 
     [Fact]
-    public void GetImages_SeriesWithoutPoster_ReturnsEmpty_NoThrow()
+    public void GetImages_YoutarrChannelWithoutPoster_ReturnsEmpty_NoThrow()
     {
-        // ART-04: a Series folder with no poster.jpg yields an empty enumerable and never throws.
+        // ART-04: a Youtarr channel folder with no poster.jpg yields an empty enumerable, no throw.
         var dir = CreateTempDir();
         try
         {
+            WriteYoutarrNfo(Path.Combine(dir, "video.nfo"));
+
+            var provider = CreateProvider();
+            var series = new Series { Path = dir };
+
+            var images = provider.GetImages(series, _directoryService.Object).ToList();
+
+            Assert.Empty(images);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetImages_NonYoutarrSeriesWithPoster_ReturnsEmpty_DoesNotForceBackdrop()
+    {
+        // BUG FIX: a regular library's Series folder that has a poster.jpg but is NOT a Youtarr
+        // channel must yield NO images — the provider must not force its poster to a Backdrop.
+        var dir = CreateTempDir();
+        try
+        {
+            File.WriteAllBytes(Path.Combine(dir, "poster.jpg"), new byte[] { 0xFF, 0xD8, 0xFF, 0xD9 });
+
             var provider = CreateProvider();
             var series = new Series { Path = dir };
 
@@ -111,6 +139,18 @@ public class YoutarrSeriesImageProviderTests
     {
         Assert.Equal(Constants.ProviderName, CreateProvider().Name);
         Assert.Equal("Youtarr", CreateProvider().Name);
+    }
+
+    /// <summary>
+    /// Writes a minimal Youtarr <c>&lt;movie&gt;</c> NFO with a youtube uniqueid — the evidence that
+    /// makes the enclosing folder a genuine Youtarr channel.
+    /// </summary>
+    private static void WriteYoutarrNfo(string path)
+    {
+        File.WriteAllText(
+            path,
+            "<?xml version=\"1.0\" encoding=\"utf-8\"?><movie><title>A Video</title><uniqueid type=\"youtube\">dQw4w9WgXcQ</uniqueid></movie>",
+            Encoding.UTF8);
     }
 
     private static string CreateTempDir()
