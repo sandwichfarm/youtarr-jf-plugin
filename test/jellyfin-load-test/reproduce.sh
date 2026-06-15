@@ -128,13 +128,15 @@ trigger_scan() {
 print_seasons_per_series() {
   echo ""
   echo "Series and their Seasons (with episode counts):"
-  api "${BASE}/Items?userId=${USER_ID}&Recursive=true&IncludeItemTypes=Series" \
-  | python3 - <<'PYEOF'
-import sys, json, urllib.request, os
+  # NOTE: do NOT pipe `api ... | python3 - <<'EOF'` — the heredoc overrides the
+  # piped stdin, so json.load(sys.stdin) reads nothing. Fetch everything via
+  # urllib inside python instead (same as the nested Season/Episode calls).
+  python3 - <<'PYEOF'
+import json, urllib.request, os
 
-data = json.load(sys.stdin)
 base = os.environ.get("JELLYFIN_URL", "http://localhost:8096")
 token = os.environ["TOKEN"]
+user_id = os.environ["USER_ID"]
 
 def jf_get(path):
     req = urllib.request.Request(base + path,
@@ -142,23 +144,24 @@ def jf_get(path):
     with urllib.request.urlopen(req) as r:
         return json.loads(r.read())
 
-for series in data.get("Items", []):
+series_list = jf_get(f"/Items?userId={user_id}&Recursive=true&IncludeItemTypes=Series")
+for series in series_list.get("Items", []):
     sid = series["Id"]
     sname = series["Name"]
-    print(f"\n  Series: {sname}")
-    seasons_data = jf_get(f"/Items?parentId={sid}&IncludeItemTypes=Season")
+    seasons_data = jf_get(f"/Items?userId={user_id}&ParentId={sid}&IncludeItemTypes=Season")
+    print(f"\n  Series: {sname}  ({len(seasons_data.get('Items', []))} season(s))")
     for season in seasons_data.get("Items", []):
         season_id = season["Id"]
         season_name = season.get("Name", "?")
         idx = season.get("IndexNumber", "?")
-        eps_data = jf_get(f"/Items?parentId={season_id}&IncludeItemTypes=Episode")
-        ep_count = len(eps_data.get("Items", []))
-        print(f"    Season [{idx}] {season_name}  ({ep_count} episode(s))")
+        eps_data = jf_get(f"/Items?userId={user_id}&ParentId={season_id}&IncludeItemTypes=Episode")
+        eps = [e["Name"] for e in eps_data.get("Items", [])]
+        print(f"    Season [{idx}] {season_name}  ({len(eps)} episode(s)): {eps}")
 PYEOF
   echo ""
 }
 
-export TOKEN BASE
+export TOKEN BASE USER_ID
 
 # ---------------------------------------------------------------------------
 # --- 7. Scan #1 + print Seasons-per-Series ----------------------------------

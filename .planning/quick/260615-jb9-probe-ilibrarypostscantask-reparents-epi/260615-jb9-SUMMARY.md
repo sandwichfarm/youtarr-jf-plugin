@@ -1,14 +1,24 @@
 ---
 phase: quick
 plan: 260615-jb9
-status: incomplete
+status: complete
 type: execute
 date: 2026-06-15
 ---
 
 # Quick Task 260615-jb9 — Season-regroup probe — Summary
 
-**Status:** Built & verified locally; **awaiting live operator validation** (the hypothesis is only answered by a live two-scan run). Marked `incomplete` until the operator pastes back logs.
+**Status:** COMPLETE. Built, locally verified, AND live-validated against a Jellyfin 10.10.7 Docker container on the dev machine (Docker was already running; no operator action needed).
+
+## RESULT: HYPOTHESIS CONFIRMED (with one nuance)
+
+Post-scan reparenting into year-seasons **works and survives rescans**. End-state after BOTH scans:
+- `Nested Probe Channel` → exactly `Season 2024` (First Video) + `Season 2025` (Part 2 of the Saga). No per-video phantom seasons, **no stray "Season 2"** from the "Part 2" folder.
+- Flat fixtures unaffected; 5 episodes total, **zero orphans, zero duplicates**.
+
+**Nuance — NOT idempotent (treadmill):** scan #2 logged `moved …` and `deleted phantom Season …` *again*, not the expected `already under … (no-op)`. Jellyfin re-resolves each episode back into its per-video folder-season on every scan (path-based resolution), and the post-scan task re-corrects it each time. The end-state is always correct, but phantom seasons exist transiently mid-scan and the task does O(episodes) work every scan. This is an efficiency/cosmetic concern, not a correctness one — **the approach is viable for the real fix.**
+
+Also confirmed: `get-or-create Season (created=False)` on every call → the year-seasons already exist as VIRTUAL seasons from `YoutarrEpisodeNfoProvider`'s `ParentIndexNumber`. The probe's real job is just to reparent episodes off the folder-seasons into those existing virtual year-seasons and delete the empty folder-seasons. This also means the same-year case (e.g. real Andraz Egart's 7 videos in 2026) is handled naturally — one virtual year-season, all episodes reparent into it; no duplicate-season risk.
 
 ## Hypothesis under test
 
@@ -49,6 +59,15 @@ Confirmed root cause: Youtarr's NESTED layout (`Channel/<video>/<video>.mp4|.nfo
 2. Run `./test/jellyfin-load-test/reproduce.sh`.
 3. Paste back the two `SEASONS AFTER SCAN` sections + the `[Youtarr] Probe` log lines.
 
-## Outcome
+## Outcome → GREEN. Proceed to the full feature.
 
-TBD — pending the operator paste. If scan #2 survives → proceed to the full feature (config toggle, Season-0 fallback, artwork, same-year dedupe). If not → abandon post-scan reparenting and pivot.
+Post-scan reparenting is the correct fix for the nested-layout season bug. Next step is the production `ILibraryPostScanTask` (replacing this throwaway probe):
+- Config toggle (respect existing `YearSeasons` setting; off → flatten/skip).
+- Season-0 (Specials) for undated episodes (probe skipped them).
+- Reduce treadmill churn where possible (e.g. only act when an episode is parented under a non-year folder-season; skip the per-scan rewrite when already correct — though note Jellyfin re-attaches by path each scan, so some rework is unavoidable).
+- Keep `DeleteFileLocation=false` (never touches media) and the `IsYoutarrChannelFolder` self-gate.
+- Then package as a normal plugin release the user installs on their Unraid Jellyfin.
+
+## Harness bug fixed
+
+`reproduce.sh`'s `print_seasons_per_series` piped `api … | python3 - <<'EOF'`, where the heredoc overrode the piped stdin (so `json.load(sys.stdin)` read nothing). Rewritten to fetch the series list via `urllib` inside python like the nested calls. Harness now runs clean end-to-end (final verdict PASS).
