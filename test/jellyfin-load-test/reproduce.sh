@@ -7,6 +7,13 @@
 # It drives Jellyfin entirely through its REST API — no browser clicking — and prints
 # a PASS/FAIL verdict. This is the live verification the planned phases deferred.
 #
+# TWO-SCAN EXTENSION (quick task 260615-jb9 — nested-layout season-regroup probe):
+# This script now runs two consecutive scans and prints the Seasons-per-Series structure
+# after each. The nested-channel PASS criteria are OPERATOR-READ, not auto-asserted,
+# because the whole point is to OBSERVE whether the YoutarrSeasonRegroupProbeTask regroup
+# survives a rescan. Auto-asserting the flat-fixture behavior (Series >= 2, no __-prefix
+# leak) is kept unchanged at the end of the script.
+#
 # PREREQUISITE: the Docker daemon must be running. Starting it needs sudo, which is the
 # operator's job (project policy: this script never escalates privileges). Start it with:
 #   sudo sh -c 'nohup dockerd >/tmp/dockerd.log 2>&1 & for i in $(seq 1 20); do [ -S /var/run/docker.sock ] && break; sleep 1; done; chmod 666 /var/run/docker.sock'
@@ -92,21 +99,131 @@ else
   echo "library 'YouTube' already exists — reusing"
 fi
 
-# --- 7. Scan + wait for it to settle ----------------------------------------
-say "Triggering library scan"
-curl -fsS -X POST "${BASE}/Library/Refresh" -H "Authorization: MediaBrowser Token=\"${TOKEN}\"" >/dev/null
-USER_ID=$(api "${BASE}/Users/Me" | python3 -c "import sys,json;print(json.load(sys.stdin)['Id'])")
-say "Waiting for scan to produce Series"
-SERIES_JSON='[]'
-for i in $(seq 1 45); do
-  SERIES_JSON=$(api "${BASE}/Items?userId=${USER_ID}&Recursive=true&IncludeItemTypes=Series" | python3 -c "import sys,json;print(json.dumps([i['Name'] for i in json.load(sys.stdin).get('Items',[])]))")
-  CNT=$(printf '%s' "${SERIES_JSON}" | python3 -c "import sys,json;print(len(json.load(sys.stdin)))")
-  [ "${CNT}" -ge 2 ] && break
-  sleep 2
-done
+# ---------------------------------------------------------------------------
+# Helper functions for two-scan validation (quick task 260615-jb9)
+# ---------------------------------------------------------------------------
 
-# --- 8. Collect results -----------------------------------------------------
-say "Results"
+# trigger_scan: POST /Library/Refresh and wait for Series to appear.
+# Stores the authenticated user ID in USER_ID (set on first call).
+trigger_scan() {
+  local scan_label="${1:-scan}"
+  say "Triggering library ${scan_label} (POST /Library/Refresh)"
+  curl -fsS -X POST "${BASE}/Library/Refresh" -H "Authorization: MediaBrowser Token=\"${TOKEN}\"" >/dev/null
+
+  if [ -z "${USER_ID:-}" ]; then
+    USER_ID=$(api "${BASE}/Users/Me" | python3 -c "import sys,json;print(json.load(sys.stdin)['Id'])")
+  fi
+
+  say "Waiting for ${scan_label} to produce Series"
+  for i in $(seq 1 45); do
+    CNT=$(api "${BASE}/Items?userId=${USER_ID}&Recursive=true&IncludeItemTypes=Series" \
+      | python3 -c "import sys,json;print(len(json.load(sys.stdin).get('Items',[])))")
+    [ "${CNT}" -ge 2 ] && echo "  ${CNT} Series found after ${i}×2s" && break
+    sleep 2
+  done
+}
+
+# print_seasons_per_series: for each Series, list its child Seasons and episode counts.
+# Depends on USER_ID being set by trigger_scan.
+print_seasons_per_series() {
+  echo ""
+  echo "Series and their Seasons (with episode counts):"
+  api "${BASE}/Items?userId=${USER_ID}&Recursive=true&IncludeItemTypes=Series" \
+  | python3 - <<'PYEOF'
+import sys, json, urllib.request, os
+
+data = json.load(sys.stdin)
+base = os.environ.get("JELLYFIN_URL", "http://localhost:8096")
+token = os.environ["TOKEN"]
+
+def jf_get(path):
+    req = urllib.request.Request(base + path,
+          headers={"Authorization": f'MediaBrowser Token="{token}"'})
+    with urllib.request.urlopen(req) as r:
+        return json.loads(r.read())
+
+for series in data.get("Items", []):
+    sid = series["Id"]
+    sname = series["Name"]
+    print(f"\n  Series: {sname}")
+    seasons_data = jf_get(f"/Items?parentId={sid}&IncludeItemTypes=Season")
+    for season in seasons_data.get("Items", []):
+        season_id = season["Id"]
+        season_name = season.get("Name", "?")
+        idx = season.get("IndexNumber", "?")
+        eps_data = jf_get(f"/Items?parentId={season_id}&IncludeItemTypes=Episode")
+        ep_count = len(eps_data.get("Items", []))
+        print(f"    Season [{idx}] {season_name}  ({ep_count} episode(s))")
+PYEOF
+  echo ""
+}
+
+export TOKEN BASE
+
+# ---------------------------------------------------------------------------
+# --- 7. Scan #1 + print Seasons-per-Series ----------------------------------
+# ---------------------------------------------------------------------------
+trigger_scan "scan #1"
+echo ""
+echo "===== SEASONS AFTER SCAN #1 ====="
+print_seasons_per_series
+echo "=================================="
+
+# ---------------------------------------------------------------------------
+# --- 8. Scan #2 + print Seasons-per-Series ----------------------------------
+# ---------------------------------------------------------------------------
+trigger_scan "scan #2"
+echo ""
+echo "===== SEASONS AFTER SCAN #2 ====="
+print_seasons_per_series
+echo "=================================="
+
+# ---------------------------------------------------------------------------
+# --- 9. Operator PASS CHECKLIST (quick task 260615-jb9 nested-channel probe)
+# ---------------------------------------------------------------------------
+echo ""
+echo "====================================================================="
+echo "OPERATOR PASS CHECKLIST — nested-layout season-regroup probe (260615-jb9)"
+echo "====================================================================="
+echo ""
+echo "Check the SEASONS AFTER SCAN #1 output above:"
+echo "  [ ] 'Nested Probe Channel' collapses to exactly TWO year seasons:"
+echo "      Season 2024 (1 episode) and Season 2025 (1 episode)"
+echo "  [ ] NO per-video-named season and NO stray 'Season 2' (from 'Part 2') remain"
+echo ""
+echo "Check the SEASONS AFTER SCAN #2 output above:"
+echo "  [ ] SAME two year seasons persist: Season 2024 (1 ep) and Season 2025 (1 ep)"
+echo "  [ ] No duplicated episodes (each season still shows exactly 1 episode)"
+echo "  [ ] No orphaned episodes"
+echo "  [ ] No re-created phantom seasons"
+echo ""
+echo "Check the container logs for [Youtarr] Probe lines:"
+echo "  Scan #1 should show:"
+echo "    - 'moved First Video -> Season 2024'"
+echo "    - 'moved Part 2 of the Saga -> Season 2025'"
+echo "    - 'deleted phantom Season ...' for per-video and/or 'Part 2' seasons"
+echo "  Scan #2 should show:"
+echo "    - 'already under Season 2024 (no-op)' and 'already under Season 2025 (no-op)'"
+echo "    - NO new 'deleted phantom Season' lines (good: idempotent)"
+echo "    - NO 'moved ... -> Season' lines (good: no re-work)"
+echo ""
+echo "Run this command to read the [Youtarr] Probe log lines from the container:"
+echo "  docker logs jellyfin-plugin-test 2>&1 | grep '\[Youtarr\] Probe'"
+echo ""
+echo "HYPOTHESIS RESULT:"
+echo "  POSITIVE (post-scan reparenting WORKS across rescans):"
+echo "    Both scans show Season 2024 + Season 2025 with 1 episode each,"
+echo "    and scan #2 is fully idempotent (no-ops + no phantom recreations)."
+echo "  NEGATIVE (approach is a dead end):"
+echo "    Scan #2 shows re-created phantom seasons, duplicated episodes,"
+echo "    or the year-seasons are gone."
+echo "====================================================================="
+echo ""
+
+# ---------------------------------------------------------------------------
+# --- 10. Collect results (flat fixtures — existing behavior) ----------------
+# ---------------------------------------------------------------------------
+say "Results (flat fixtures)"
 fetch() { api "${BASE}/Items?userId=${USER_ID}&Recursive=true&IncludeItemTypes=$1&Fields=ParentId" \
   | python3 -c "import sys,json;[print(' -',i['Name']) for i in json.load(sys.stdin).get('Items',[])]"; }
 
@@ -118,7 +235,7 @@ SERIES_NAMES=$(api "${BASE}/Items?userId=${USER_ID}&Recursive=true&IncludeItemTy
 SERIES_COUNT=$(printf '%s' "${SERIES_NAMES}" | awk -F'|' '{print ($0==""?0:NF)}')
 KIDS_LEAK=$(api "${BASE}/Items?userId=${USER_ID}&Recursive=true&IncludeItemTypes=Series" | python3 -c "import sys,json;print(any('__' in i['Name'] for i in json.load(sys.stdin).get('Items',[])))")
 
-# --- 9. Verdict -------------------------------------------------------------
+# --- 11. Verdict (flat-fixture Series-grouping — unchanged) -----------------
 say "Verdict"
 echo "Series found: ${SERIES_COUNT}  -> [${SERIES_NAMES}]"
 echo "__-prefix leaked as a Series: ${KIDS_LEAK} (must be False)"
