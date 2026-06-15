@@ -1,6 +1,7 @@
 using Jellyfin.Plugin.Youtarr.Providers;
 using Jellyfin.Plugin.Youtarr.Utils;
 using MediaBrowser.Controller;
+using MediaBrowser.Controller.Library;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Controller.Resolvers;
@@ -22,6 +23,10 @@ namespace Jellyfin.Plugin.Youtarr;
 /// live confirmation of auto-discovery in plan 03-03.
 /// <c>ILocalMetadataProvider&lt;Series&gt;</c> implementations are always auto-discovered and need
 /// no explicit registration here.
+/// The explicit <c>ILibraryPostScanTask</c> registration below follows the same safety-net
+/// precedent: auto-discovery may cover it, but the explicit registration guarantees the probe
+/// runs. This registration is a THROWAWAY for quick task 260615-jb9 and will be removed once
+/// the probe hypothesis is answered.
 /// </remarks>
 public class PluginServiceRegistrator : IPluginServiceRegistrator
 {
@@ -30,5 +35,10 @@ public class PluginServiceRegistrator : IPluginServiceRegistrator
     {
         serviceCollection.AddSingleton<IResolverIgnoreRule, YoutarrPrefixIgnoreRule>();
         serviceCollection.AddSingleton<ILocalImageProvider, YoutarrSeriesImageProvider>();
+
+        // THROWAWAY PROBE (quick task 260615-jb9): explicit registration mirrors the
+        // IResolverIgnoreRule / ILocalImageProvider safety-net precedent above so the
+        // season-regroup probe definitely runs as an ILibraryPostScanTask after each scan.
+        serviceCollection.AddSingleton<ILibraryPostScanTask, YoutarrSeasonRegroupProbeTask>();
     }
 }
