@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movie>
+  <title>Part 2 of the Saga</title>
+  <studio>Nested Probe Channel</studio>
+  <premiered>2025-08-22</premiered>
+  <plot>A nested-layout fixture video for quick task 260615-jb9 probe. The "Part 2" in the folder name intentionally reproduces the stray-numeric-season symptom where Jellyfin's season path parser reads it as Season 2. This video is from 2025, a different year from vidA001.</plot>
+  <uniqueid type="youtube">vidB002</uniqueid>
+</movie>

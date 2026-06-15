@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<movie>
+  <title>First Video</title>
+  <studio>Nested Probe Channel</studio>
+  <premiered>2024-05-10</premiered>
+  <plot>A nested-layout fixture video for quick task 260615-jb9 probe. This video is from 2024 and resides in a per-video subfolder to reproduce the season mis-parsing symptom.</plot>
+  <uniqueid type="youtube">vidA001</uniqueid>
+</movie>
