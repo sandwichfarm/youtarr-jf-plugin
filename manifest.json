@@ -8,6 +8,14 @@
         "category": "Metadata",
         "versions": [
             {
+                "version": "1.1.0.1",
+                "changelog": "v1.1.0.1 \u2014 Fixes the Jellyfin dashboard configuration page so current values load and changes to year seasons, episode numbering, and description length persist.\nv1.1.0.0 \u2014 Correctly reconciles both flat and nested Youtarr layouts into one Jellyfin season per authoritative NFO publication year. Repairs stale physical-folder season links after every scan and removes empty phantom seasons without touching media. Updated for Jellyfin 10.11.x / .NET 9.\nv1.0.1.0 \u2014 Providers now self-gate to Youtarr channel folders only. The Series-name and channel-backdrop providers previously acted on every Series in every library; they now activate only when a folder contains a Youtarr <movie> NFO with a YouTube ID, so other libraries (regular TV, movies, anime) are left untouched even when the plugin is enabled globally. No behavior change for genuine Youtarr channels.\nv1.0.0.0 \u2014 Initial release. Channel folders resolve as Series; videos resolve as Episodes grouped into year seasons. Per-video NFO metadata (title, plot, premiere date, genres, tags, YouTube ID). Channel artwork as Series poster and backdrop. Plugin configuration page with year-seasons toggle. File-only \u2014 no API key required.\n",
+                "targetAbi": "10.11.0.0",
+                "sourceUrl": "https://github.com/sandwichfarm/youtarr-jf-plugin/releases/download/v1.1.0.1/youtarrmetadata_1.1.0.1.zip",
+                "checksum": "df2fdbb46795f87682eff2de219459ce",
+                "timestamp": "2026-09-04T11:55:53Z"
+            },
+            {
                 "version": "1.1.0.0",
                 "changelog": "v1.1.0.0 \u2014 Correctly reconciles both flat and nested Youtarr layouts into one Jellyfin season per authoritative NFO publication year. Repairs stale physical-folder season links after every scan and removes empty phantom seasons without touching media. Updated for Jellyfin 10.11.x / .NET 9.\nv1.0.1.0 \u2014 Providers now self-gate to Youtarr channel folders only. The Series-name and channel-backdrop providers previously acted on every Series in every library; they now activate only when a folder contains a Youtarr <movie> NFO with a YouTube ID, so other libraries (regular TV, movies, anime) are left untouched even when the plugin is enabled globally. No behavior change for genuine Youtarr channels.\nv1.0.0.0 \u2014 Initial release. Channel folders resolve as Series; videos resolve as Episodes grouped into year seasons. Per-video NFO metadata (title, plot, premiere date, genres, tags, YouTube ID). Channel artwork as Series poster and backdrop. Plugin configuration page with year-seasons toggle. File-only \u2014 no API key required.\n",
                 "targetAbi": "10.11.0.0",
