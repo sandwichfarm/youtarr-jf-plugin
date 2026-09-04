@@ -8,6 +8,16 @@ date: 2026-06-15
 
 # Quick Task 260615-jb9 — Season-regroup probe — Summary
 
+> **Correction (2026-09-04):** the original positive conclusion below was based on a
+> harness that returned as soon as Series existed, not when Jellyfin's asynchronous scan
+> reached a terminal state. The probe updated `Episode.ParentId` but not the UI-facing
+> `SeasonId`/`SeasonName`, and `LibraryManager.DeleteItem` recursively deleted episode rows
+> on Jellyfin 10.11.11. The production replacement is `YoutarrSeasonRegroupTask`: it writes
+> the complete season identity, removes phantom rows through `IItemRepository` only after
+> persisted reparenting, and passed both a clean two-scan run and an in-place upgrade from
+> the reproduced bad state on Jellyfin 10.11.11. Treat the remainder of this document as
+> historical probe output, not current verification evidence.
+
 **Status:** COMPLETE. Built, locally verified, AND live-validated against a Jellyfin 10.10.7 Docker container on the dev machine (Docker was already running; no operator action needed).
 
 ## RESULT: HYPOTHESIS CONFIRMED (with one nuance)

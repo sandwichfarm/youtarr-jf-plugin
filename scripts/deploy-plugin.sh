@@ -1,52 +1,78 @@
 #!/usr/bin/env bash
 #
-# deploy-plugin.sh — dev iteration loop for the Youtarr Jellyfin plugin.
-#
-# Publishes the plugin in Release mode and stages the single plugin DLL into the
-# load-test harness plugins directory under the versioned folder Jellyfin expects:
-#
-#     test/jellyfin-load-test/plugins/YoutarrMetadata_1.0.0.0/Jellyfin.Plugin.Youtarr.dll
-#
-# The folder name MUST be "YoutarrMetadata_1.0.0.0" — <PluginName>_<version> from
-# build.yaml (name: YoutarrMetadata, version: 1.0.0.0). Drift here = plugin not found.
-#
-# This script does NOT run docker or sudo. Starting the Docker daemon and bringing
-# the Jellyfin container up are operator steps documented in
-# test/jellyfin-load-test/README.md (project policy: never escalate via sudo).
+# Build and stage the plugin for either the disposable load-test server or a local
+# Jellyfin installation. A local .NET 9 SDK is preferred; Docker is the fallback.
 #
 # Usage:
-#     ./scripts/deploy-plugin.sh
-#
-# After running, restart the container to pick up the new DLL:
-#     docker restart jellyfin-plugin-test
+#   ./scripts/deploy-plugin.sh
+#   JELLYFIN_PLUGIN_DIR=/path/to/YoutarrMetadata_1.1.0.0 \
+#     JELLYFIN_CONTAINER=jellyfin ./scripts/deploy-plugin.sh
 #
 set -euo pipefail
 
-# Resolve the repo root from this script's location so the script is runnable
-# from any working directory.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-
-PROJECT_DIR="${REPO_ROOT}/Jellyfin.Plugin.Youtarr"
-PUBLISH_DIR="${REPO_ROOT}/dist/Jellyfin.Plugin.Youtarr"
+PROJECT_REL="Jellyfin.Plugin.Youtarr"
+PROJECT_DIR="${REPO_ROOT}/${PROJECT_REL}"
+PUBLISH_REL="dist/Jellyfin.Plugin.Youtarr"
+PUBLISH_DIR="${REPO_ROOT}/${PUBLISH_REL}"
 PLUGIN_DLL="Jellyfin.Plugin.Youtarr.dll"
-PLUGIN_FOLDER="YoutarrMetadata_1.0.0.0"
-DEST_DIR="${REPO_ROOT}/test/jellyfin-load-test/plugins/${PLUGIN_FOLDER}"
 
-echo "==> Publishing plugin (Release) ..."
-dotnet publish "${PROJECT_DIR}" -c Release -o "${PUBLISH_DIR}"
+read_yaml_value() {
+  local key="$1"
+  sed -n -E "s/^${key}:[[:space:]]*\"?([^\"]+)\"?[[:space:]]*$/\\1/p" \
+    "${PROJECT_DIR}/build.yaml" | head -1
+}
 
-if [[ ! -f "${PUBLISH_DIR}/${PLUGIN_DLL}" ]]; then
-  echo "ERROR: expected ${PUBLISH_DIR}/${PLUGIN_DLL} after publish, but it is missing." >&2
+PLUGIN_NAME="$(read_yaml_value name)"
+PLUGIN_VERSION="$(read_yaml_value version)"
+if [[ -z "${PLUGIN_NAME}" || -z "${PLUGIN_VERSION}" ]]; then
+  echo "ERROR: could not read plugin name/version from ${PROJECT_DIR}/build.yaml" >&2
   exit 1
 fi
 
-echo "==> Staging DLL into ${DEST_DIR} ..."
+DEFAULT_PLUGIN_DIR="${REPO_ROOT}/test/jellyfin-load-test/plugins/${PLUGIN_NAME}_${PLUGIN_VERSION}"
+DEST_DIR="${JELLYFIN_PLUGIN_DIR:-${DEFAULT_PLUGIN_DIR}}"
+
+has_dotnet_9_sdk() {
+  command -v dotnet >/dev/null 2>&1 \
+    && dotnet --list-sdks 2>/dev/null | grep -Eq '^9\.'
+}
+
+echo "==> Publishing ${PLUGIN_NAME} ${PLUGIN_VERSION} (Release) ..."
+if has_dotnet_9_sdk; then
+  dotnet publish "${PROJECT_DIR}" -c Release -o "${PUBLISH_DIR}"
+elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  echo "    .NET 9 SDK not found locally; using mcr.microsoft.com/dotnet/sdk:9.0"
+  docker run --rm \
+    --user "$(id -u):$(id -g)" \
+    -e DOTNET_CLI_HOME=/tmp/youtarr-dotnet-home \
+    -e NUGET_PACKAGES=/tmp/youtarr-nuget-packages \
+    -v "${REPO_ROOT}:/src" \
+    -w /src \
+    mcr.microsoft.com/dotnet/sdk:9.0 \
+    bash -lc \
+    "dotnet publish '${PROJECT_REL}' -c Release -o '${PUBLISH_REL}' && dotnet clean '${PROJECT_REL}' -c Release"
+else
+  echo "ERROR: building requires either the .NET 9 SDK or a running Docker daemon." >&2
+  exit 1
+fi
+
+if [[ ! -f "${PUBLISH_DIR}/${PLUGIN_DLL}" ]]; then
+  echo "ERROR: expected ${PUBLISH_DIR}/${PLUGIN_DLL}, but it is missing." >&2
+  exit 1
+fi
+
+echo "==> Staging plugin into ${DEST_DIR} ..."
 mkdir -p "${DEST_DIR}"
 cp -f "${PUBLISH_DIR}/${PLUGIN_DLL}" "${DEST_DIR}/${PLUGIN_DLL}"
 
-echo "==> Done. Staged:"
-echo "    ${DEST_DIR}/${PLUGIN_DLL}"
-echo
-echo "Next: restart the Jellyfin test container to load the new DLL:"
-echo "    docker restart jellyfin-plugin-test"
+echo "==> Staged ${DEST_DIR}/${PLUGIN_DLL}"
+
+if [[ -n "${JELLYFIN_CONTAINER:-}" ]]; then
+  echo "==> Restarting Jellyfin container ${JELLYFIN_CONTAINER} ..."
+  docker restart "${JELLYFIN_CONTAINER}" >/dev/null
+  echo "==> Restarted ${JELLYFIN_CONTAINER}"
+else
+  echo "Next: restart Jellyfin so it loads the new DLL."
+fi

@@ -26,7 +26,7 @@ public class YoutarrSeriesNfoProviderTests
 
     private static ItemInfo ItemInfoForPath(string path)
     {
-        // ItemInfo has no parameterless ctor in 10.10.7; construct from a BaseItem then set Path.
+        // ItemInfo has no parameterless ctor in 10.11.11; construct from a BaseItem then set Path.
         return new ItemInfo(new Series()) { Path = path };
     }
 

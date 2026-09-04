@@ -144,7 +144,12 @@ public class YoutarrEpisodeNfoProvider : ILocalMetadataProvider<Episode>, IHasIt
             episode.ProductionYear = date.Year;
 
             // LIB-03 / LIB-04: year-seasons toggle. Off → flatten into Season 1.
-            episode.ParentIndexNumber = config.YearSeasons ? date.Year : 1;
+            var seasonNumber = config.YearSeasons ? date.Year : 1;
+            episode.ParentIndexNumber = seasonNumber;
+            episode.SeasonName = string.Format(
+                System.Globalization.CultureInfo.InvariantCulture,
+                "Season {0}",
+                seasonNumber);
 
             // EPI-05: numbering scheme. YYYYMMDD → upload-date integer; Default → auto-sequence.
             episode.IndexNumber = config.EpisodeNumberingScheme == EpisodeNumberingScheme.YYYYMMDD
@@ -156,6 +161,7 @@ public class YoutarrEpisodeNfoProvider : ILocalMetadataProvider<Episode>, IHasIt
             // EPI-07 fallback chain. No valid <premiered>.
             // Always Season 0 (Specials), no episode number — never trust <dateadded> for the year.
             episode.ParentIndexNumber = 0;
+            episode.SeasonName = "Specials";
             episode.IndexNumber = null;
 
             // …but if <dateadded> is present, still give the episode a date so it sorts sensibly.

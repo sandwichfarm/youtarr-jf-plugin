@@ -96,6 +96,11 @@ SOURCE_URL="${REPO_URL}/releases/download/v${VERSION}/youtarrmetadata_${VERSION}
 echo "==> Building plugin ZIP with jprm ..."
 mkdir -p "${DIST_DIR}"
 
+# A preceding Docker-fallback build uses an isolated NuGet cache. Restore with the
+# active host SDK first so jprm's clean/build sequence never consumes stale container
+# paths from obj/project.assets.json.
+dotnet restore "${PLUGIN_DIR}"
+
 # jprm plugin build MUST run from the directory containing build.yaml — i.e.
 # Jellyfin.Plugin.Youtarr/. Running it from the repo root is a silent no-op
 # (exit 0, no ZIP) because jprm searches for build.yaml in the given PATH, not
@@ -103,8 +108,8 @@ mkdir -p "${DIST_DIR}"
 cd "${PLUGIN_DIR}"  # = ${REPO_ROOT}/Jellyfin.Plugin.Youtarr
 jprm plugin build . -o "${DIST_DIR}"
 
-# Resolve the produced ZIP. Fail loudly if the build silently produced nothing.
-ZIP="$(ls "${DIST_DIR}"/youtarrmetadata_*.zip 2>/dev/null | sort -V | tail -1 || true)"
+# Resolve the exact current-version ZIP. Never select a stale higher-version artifact.
+ZIP="${DIST_DIR}/youtarrmetadata_${VERSION}.zip"
 if [[ -z "${ZIP}" || ! -f "${ZIP}" ]]; then
   echo "ERROR: jprm produced no ZIP in ${DIST_DIR}." >&2
   echo "       Confirm 'jprm plugin build' ran from ${PLUGIN_DIR} (where build.yaml lives)." >&2
@@ -112,11 +117,14 @@ if [[ -z "${ZIP}" || ! -f "${ZIP}" ]]; then
 fi
 echo "==> Built: ${ZIP}"
 
-# Generate / update the working manifest in dist/. 'jprm repo init' errors if the
-# file already exists, so guard it; 'jprm repo add' is idempotent (updates the
-# entry for this GUID in place rather than duplicating it).
+# Generate / update the working manifest in dist/. The tracked root manifest is
+# authoritative for already-published versions; seed from it so a stale local dist
+# manifest can never rewrite an older release's checksum or timestamp.
 DIST_MANIFEST="${DIST_DIR}/manifest.json"
-if [[ ! -f "${DIST_MANIFEST}" ]]; then
+ROOT_MANIFEST="${REPO_ROOT}/manifest.json"
+if [[ -f "${ROOT_MANIFEST}" ]]; then
+  cp -f "${ROOT_MANIFEST}" "${DIST_MANIFEST}"
+elif [[ ! -f "${DIST_MANIFEST}" ]]; then
   echo "==> Initializing dist/manifest.json ..."
   jprm repo init "${DIST_MANIFEST}"
 fi
@@ -130,7 +138,6 @@ jprm repo add "${DIST_MANIFEST}" "${ZIP}" --plugin-url "${SOURCE_URL}"
 # guaranteed-resolvable; jprm already wrote that sourceUrl above, so we copy the
 # jprm output verbatim (preserving checksum/targetAbi/timestamp/changelog/guid/name)
 # and re-assert sourceUrl defensively in case REPO_URL was overridden mid-run.
-ROOT_MANIFEST="${REPO_ROOT}/manifest.json"
 echo "==> Writing tracked repo-root manifest.json ..."
 python3 - "${DIST_MANIFEST}" "${ROOT_MANIFEST}" "${VERSION}" "${SOURCE_URL}" <<'PY'
 import json, sys

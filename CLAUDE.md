@@ -4,6 +4,11 @@
 
 **Youtarr Jellyfin Plugin**
 
+> **Current compatibility (2026-09-04):** the active implementation targets Jellyfin
+> 10.11.x (`Jellyfin.Controller`/`Model` 10.11.11, `net9.0`, ABI 10.11.0.0). Older
+> 10.10/net8 planning sections below are retained as historical design context and must not
+> override the current project/build metadata.
+
 A Jellyfin plugin (C#/.NET, targeting Jellyfin 10.10.x) that turns a [Youtarr](https://github.com/DialmasterOrg/Youtarr) download folder into a clean, well-organized Jellyfin library. Instead of a flat wall of videos, each YouTube channel becomes a **Show (Series)**, each video becomes an **Episode**, and episodes are grouped into **seasons by upload year**. Channel artwork is surfaced as the Series poster/backdrop. It works entirely from the NFO files and images Youtarr writes to disk — no API key required.
 
 It is modeled on [`tubearchivist-jf-plugin`](https://github.com/tubearchivist/tubearchivist-jf-plugin) but solves a different problem: TubeArchivist keeps metadata in its own database and writes nothing to disk, so its plugin *must* call an API. Youtarr already writes per-video `<movie>` NFOs, poster images, and embedded MP4 metadata, so this plugin can be file-only. The value it adds over Jellyfin's built-in NFO import is **structure** — grouping the flat collection into channels-as-shows with year seasons — not basic metadata reading.
