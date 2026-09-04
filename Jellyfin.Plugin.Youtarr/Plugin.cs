@@ -42,7 +42,7 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
     /// <inheritdoc />
     public override string Description => "Organizes Youtarr downloads as Series/Season/Episode in Jellyfin.";
 
-    // DI registration (plan 01-02): in Jellyfin 10.10.x BasePlugin<T> has no RegisterServices
+    // DI registration: in Jellyfin 10.11.x BasePlugin<T> has no RegisterServices
     // override. YoutarrPrefixIgnoreRule is registered via the separate IPluginServiceRegistrator
     // implementation in PluginServiceRegistrator.cs, which Jellyfin auto-discovers at startup
     // (serviceCollection.AddSingleton<IResolverIgnoreRule, YoutarrPrefixIgnoreRule>()).

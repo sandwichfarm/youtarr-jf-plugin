@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <AssemblyName>Jellyfin.Plugin.Youtarr</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.Youtarr</RootNamespace>
     <!-- Keep in sync with build.yaml version (Jellyfin reads the plugin version from meta.json/build.yaml). -->
-    <Version>1.0.1.0</Version>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
+    <Version>1.1.0.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -19,10 +19,10 @@
     <!-- ExcludeAssets=runtime is CRITICAL: prevents Jellyfin runtime DLLs from
          being bundled in the plugin ZIP. Without this, the server finds duplicate
          assemblies and the plugin fails with TypeLoadException. -->
-    <PackageReference Include="Jellyfin.Controller" Version="10.10.7">
+    <PackageReference Include="Jellyfin.Controller" Version="10.11.11">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
-    <PackageReference Include="Jellyfin.Model" Version="10.10.7">
+    <PackageReference Include="Jellyfin.Model" Version="10.11.11">
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>

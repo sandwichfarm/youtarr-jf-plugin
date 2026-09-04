@@ -113,6 +113,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260610-13m | add a manifest so that the plugin can actually be installed in jellyfin | 2026-06-10 | 4d622dc | [260610-13m-add-a-manifest-so-that-the-plugin-can-ac](./quick/260610-13m-add-a-manifest-so-that-the-plugin-can-ac/) |
+| 260615-jb9 | Probe: ILibraryPostScanTask reparents episodes into year-seasons (nested-layout season fix) — built & verified locally, **awaiting live operator validation** | 2026-06-15 | 84a535c | [260615-jb9-probe-ilibrarypostscantask-reparents-epi](./quick/260615-jb9-probe-ilibrarypostscantask-reparents-epi/) |
 
 ## Deferred Items
 

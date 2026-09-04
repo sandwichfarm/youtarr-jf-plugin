@@ -1,8 +1,8 @@
 name: "YoutarrMetadata"
 guid: "80302d7f-7fc3-4b1c-9a3f-fd85b98b9a69"
-version: "1.0.1.0"
-targetAbi: "10.10.0.0"
-framework: "net8.0"
+version: "1.1.0.0"
+targetAbi: "10.11.0.0"
+framework: "net9.0"
 overview: "Organizes Youtarr downloads as Series/Season/Episode in Jellyfin"
 description: >
   Maps a Youtarr channel download folder into a Jellyfin TV Shows library.
@@ -13,6 +13,11 @@ owner: "sandwichfarm"
 artifacts:
   - "Jellyfin.Plugin.Youtarr.dll"
 changelog: >
+  v1.1.0.0 — Correctly reconciles both flat and nested Youtarr layouts into one
+  Jellyfin season per authoritative NFO publication year. Repairs stale physical-folder
+  season links after every scan and removes empty phantom seasons without touching media.
+  Updated for Jellyfin 10.11.x / .NET 9.
+
   v1.0.1.0 — Providers now self-gate to Youtarr channel folders only. The Series-name
   and channel-backdrop providers previously acted on every Series in every library;
   they now activate only when a folder contains a Youtarr <movie> NFO with a YouTube ID,

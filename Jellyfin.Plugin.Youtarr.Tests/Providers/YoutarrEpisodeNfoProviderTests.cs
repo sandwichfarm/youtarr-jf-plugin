@@ -31,7 +31,7 @@ public class YoutarrEpisodeNfoProviderTests
 
     private static ItemInfo ItemInfoForPath(string path)
     {
-        // ItemInfo has no parameterless ctor in 10.10.7; construct from a BaseItem then set Path.
+        // ItemInfo has no parameterless ctor in 10.11.11; construct from a BaseItem then set Path.
         return new ItemInfo(new Episode()) { Path = path };
     }
 
@@ -232,6 +232,7 @@ public class YoutarrEpisodeNfoProviderTests
         var ep = YoutarrEpisodeNfoProvider.MapToEpisode(
             Data(premiere: new DateTime(2024, 3, 15)), Config(yearSeasons: true));
         Assert.Equal(2024, ep.ParentIndexNumber);
+        Assert.Equal("Season 2024", ep.SeasonName);
         Assert.Equal(2024, ep.ProductionYear);
         Assert.Equal(new DateTime(2024, 3, 15), ep.PremiereDate);
     }
@@ -242,6 +243,7 @@ public class YoutarrEpisodeNfoProviderTests
         var ep = YoutarrEpisodeNfoProvider.MapToEpisode(
             Data(premiere: new DateTime(2024, 3, 15)), Config(yearSeasons: false));
         Assert.Equal(1, ep.ParentIndexNumber);
+        Assert.Equal("Season 1", ep.SeasonName);
     }
 
     // ---- EPI-07 fallback ----
@@ -251,6 +253,7 @@ public class YoutarrEpisodeNfoProviderTests
     {
         var ep = YoutarrEpisodeNfoProvider.MapToEpisode(Data(premiere: null, dateAdded: null), Config());
         Assert.Equal(0, ep.ParentIndexNumber);
+        Assert.Equal("Specials", ep.SeasonName);
     }
 
     [Fact]

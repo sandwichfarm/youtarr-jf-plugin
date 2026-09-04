@@ -13,7 +13,7 @@ It reads the NFO files and images Youtarr already writes to disk. **No API key, 
 
 ## Requirements
 
-- **Jellyfin 10.10.x** (the plugin targets ABI `10.10.0.0`). Other major versions will refuse to load.
+- **Jellyfin 10.11.x** (the plugin targets ABI `10.11.0.0` and .NET 9). This branch is verified against Jellyfin 10.11.11.
 - A **Youtarr** install that writes NFO files + images to disk (the default).
 - A Jellyfin library configured as **TV Shows** pointed at your Youtarr downloads folder (see [Set up the library](#2-set-up-the-library) — this is the step people miss).
 
@@ -35,7 +35,7 @@ It reads the NFO files and images Youtarr already writes to disk. **No API key, 
 ### Option B — Manual install
 
 1. Download `youtarrmetadata_<version>.zip` from the [Releases](https://github.com/sandwichfarm/youtarr-jf-plugin/releases) page (or build it — see [From source](#build-from-source)).
-2. Create a folder named **`YoutarrMetadata_<version>`** (e.g. `YoutarrMetadata_1.0.0.0`) inside your Jellyfin **plugins** directory:
+2. Create a folder named **`YoutarrMetadata_<version>`** (e.g. `YoutarrMetadata_1.1.0.0`) inside your Jellyfin **plugins** directory:
    - Docker: `<your config volume>/plugins/`
    - Linux (native): `/var/lib/jellyfin/plugins/`
    - Windows: `%LOCALAPPDATA%\jellyfin\plugins\`
@@ -44,6 +44,10 @@ It reads the NFO files and images Youtarr already writes to disk. **No API key, 
 4. **Restart Jellyfin.**
 
 Confirm it loaded: **Dashboard → Plugins** shows **YoutarrMetadata** as **Active**.
+
+When upgrading manually, stop Jellyfin first and replace the existing YoutarrMetadata
+plugin directory (or move the old directory outside `plugins/` before creating the new
+one). Do not leave two YoutarrMetadata DLLs under `plugins/`; both use the same plugin GUID.
 
 ---
 
@@ -64,7 +68,7 @@ Youtarr organizes downloads one folder per channel:
    └─ …
 ```
 
-Both Youtarr layouts work: flat (`Channel/video.mp4`) and nested (`Channel/video/video.mp4`). Youtarr `__`-prefixed grouping folders (e.g. `__kids`, `__music`) are skipped, not turned into junk shows — point a separate library at each of those if you use them.
+Both Youtarr layouts work: flat (`Channel/video.mp4`) and nested (`Channel/video/video.mp4`). Nested is Youtarr's default. Jellyfin initially interprets each video subfolder as a season, so the plugin reconciles those temporary folder-seasons into the NFO `<premiered>` year after every completed library scan. Youtarr `__`-prefixed grouping folders (e.g. `__kids`, `__music`) are skipped, not turned into junk shows — point a separate library at each of those if you use them.
 
 ### 2. Set up the library
 
@@ -122,7 +126,7 @@ Videos with a missing or unparseable upload date don't break the scan — they l
 ## Troubleshooting
 
 **Plugin shows "Malfunctioned" / "Not Supported", or doesn't appear.**
-You're not on Jellyfin **10.10.x**. The plugin targets ABI `10.10.0.0`; install a matching server, or a build for your version. Check **Dashboard → Logs** for `TypeLoadException` / `ReflectionTypeLoadException`.
+You're not on Jellyfin **10.11.x**. The plugin targets ABI `10.11.0.0`; install a matching server, or a build for your version. Check **Dashboard → Logs** for `TypeLoadException` / `ReflectionTypeLoadException`.
 
 **Channels show up as a flat list of movies, not as Shows.**
 The library **Content type** isn't **Shows**. You can't change the type of an existing library — remove it and re-add it as **Shows** (see [step 2](#2-set-up-the-library)).
@@ -132,6 +136,9 @@ Turn **off** the TheTVDB/TMDb metadata downloaders on the library, and turn **of
 
 **Episodes aren't grouped into year seasons (everything's in one season).**
 Make sure **Group episodes into year seasons** is **On** in the plugin settings, then refresh metadata. Seasons are created from each video's `<premiered>` year — videos with no valid date go to Season 0.
+
+**I see numeric seasons (`Season 18`, `Season 20`, `Season 1820`) or one season per video.**
+That is Jellyfin interpreting Youtarr's nested video folders as TV season folders. Install version 1.1.0.0 or newer, restart Jellyfin, run a normal **Scan Library**, wait for the scheduled task to finish, then reload the series page. The post-scan reconciler repairs existing database state directly; you do not need to move or rename the media files.
 
 **Posters or thumbnails don't show.**
 Confirm `poster.jpg` sits in the channel folder and a `<video>.jpg` sits next to each video (Youtarr writes these). Jellyfin caches images aggressively — run **⋯ → Refresh Metadata → Replace all images**. (Channel art is portrait, so it's also reused as the backdrop — that's expected.)
@@ -146,11 +153,18 @@ Settings apply on the next scan/refresh. Run **⋯ → Refresh Metadata** on the
 
 ## Build from source
 
-Requires the **.NET 8 SDK**.
+Requires the **.NET 9 SDK**, or a running Docker daemon (the deploy helper falls back to the official .NET 9 SDK image).
 
 ```bash
 # Build + run the test suite
 dotnet test Jellyfin.Plugin.Youtarr.Tests/Jellyfin.Plugin.Youtarr.Tests.csproj -c Release
+
+# Build and stage into the disposable Jellyfin harness
+./scripts/deploy-plugin.sh
+
+# Or build, install into a local Jellyfin plugin folder, and restart its container
+JELLYFIN_PLUGIN_DIR=/path/to/plugins/YoutarrMetadata_1.1.0.0 \
+JELLYFIN_CONTAINER=jellyfin ./scripts/deploy-plugin.sh
 
 # Produce the installable ZIP + repository manifest into ./dist
 #   (requires jprm:  pip install --user jprm)
@@ -160,7 +174,7 @@ dotnet test Jellyfin.Plugin.Youtarr.Tests/Jellyfin.Plugin.Youtarr.Tests.csproj -
 `scripts/package.sh` writes `dist/youtarrmetadata_<version>.zip` and refreshes the repo-root `manifest.json`. To cut a release, push a tag — `.github/workflows/release.yml` builds the ZIP, attaches it to the GitHub Release, and updates the manifest:
 
 ```bash
-git tag v1.0.0.0 && git push origin v1.0.0.0
+git tag v1.1.0.0 && git push origin v1.1.0.0
 ```
 
 ---
@@ -170,7 +184,7 @@ git tag v1.0.0.0 && git push origin v1.0.0.0
 - **File-only:** the plugin reads Youtarr's on-disk NFOs and images. It never connects to Youtarr or YouTube and never modifies your media.
 - **Watched-status / playlist sync** between Jellyfin and Youtarr is **not** included (that would require a Youtarr API). It may come in a future version.
 - Channel *description* as the Series overview isn't available yet — Youtarr doesn't write a channel-level NFO.
-- Designed and tested against **Jellyfin 10.10.x**.
+- Designed for **Jellyfin 10.11.x** and integration-tested against **10.11.11**.
 
 ## License
 
