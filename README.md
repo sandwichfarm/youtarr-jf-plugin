@@ -35,7 +35,7 @@ It reads the NFO files and images Youtarr already writes to disk. **No API key, 
 ### Option B — Manual install
 
 1. Download `youtarrmetadata_<version>.zip` from the [Releases](https://github.com/sandwichfarm/youtarr-jf-plugin/releases) page (or build it — see [From source](#build-from-source)).
-2. Create a folder named **`YoutarrMetadata_<version>`** (e.g. `YoutarrMetadata_1.1.0.0`) inside your Jellyfin **plugins** directory:
+2. Create a folder named **`YoutarrMetadata_<version>`** (e.g. `YoutarrMetadata_1.1.0.1`) inside your Jellyfin **plugins** directory:
    - Docker: `<your config volume>/plugins/`
    - Linux (native): `/var/lib/jellyfin/plugins/`
    - Windows: `%LOCALAPPDATA%\jellyfin\plugins\`
@@ -138,7 +138,7 @@ Turn **off** the TheTVDB/TMDb metadata downloaders on the library, and turn **of
 Make sure **Group episodes into year seasons** is **On** in the plugin settings, then refresh metadata. Seasons are created from each video's `<premiered>` year — videos with no valid date go to Season 0.
 
 **I see numeric seasons (`Season 18`, `Season 20`, `Season 1820`) or one season per video.**
-That is Jellyfin interpreting Youtarr's nested video folders as TV season folders. Install version 1.1.0.0 or newer, restart Jellyfin, run a normal **Scan Library**, wait for the scheduled task to finish, then reload the series page. The post-scan reconciler repairs existing database state directly; you do not need to move or rename the media files.
+That is Jellyfin interpreting Youtarr's nested video folders as TV season folders. Install version 1.1.0.1 or newer, restart Jellyfin, run a normal **Scan Library**, wait for the scheduled task to finish, then reload the series page. The post-scan reconciler repairs existing database state directly; you do not need to move or rename the media files.
 
 **Posters or thumbnails don't show.**
 Confirm `poster.jpg` sits in the channel folder and a `<video>.jpg` sits next to each video (Youtarr writes these). Jellyfin caches images aggressively — run **⋯ → Refresh Metadata → Replace all images**. (Channel art is portrait, so it's also reused as the backdrop — that's expected.)
@@ -163,7 +163,7 @@ dotnet test Jellyfin.Plugin.Youtarr.Tests/Jellyfin.Plugin.Youtarr.Tests.csproj -
 ./scripts/deploy-plugin.sh
 
 # Or build, install into a local Jellyfin plugin folder, and restart its container
-JELLYFIN_PLUGIN_DIR=/path/to/plugins/YoutarrMetadata_1.1.0.0 \
+JELLYFIN_PLUGIN_DIR=/path/to/plugins/YoutarrMetadata_1.1.0.1 \
 JELLYFIN_CONTAINER=jellyfin ./scripts/deploy-plugin.sh
 
 # Produce the installable ZIP + repository manifest into ./dist
@@ -174,7 +174,7 @@ JELLYFIN_CONTAINER=jellyfin ./scripts/deploy-plugin.sh
 `scripts/package.sh` writes `dist/youtarrmetadata_<version>.zip` and refreshes the repo-root `manifest.json`. To cut a release, push a tag — `.github/workflows/release.yml` builds the ZIP, attaches it to the GitHub Release, and updates the manifest:
 
 ```bash
-git tag v1.1.0.0 && git push origin v1.1.0.0
+git tag v1.1.0.1 && git push origin v1.1.0.1
 ```
 
 ---

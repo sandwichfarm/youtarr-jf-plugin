@@ -5,9 +5,9 @@
     <AssemblyName>Jellyfin.Plugin.Youtarr</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.Youtarr</RootNamespace>
     <!-- Keep in sync with build.yaml version (Jellyfin reads the plugin version from meta.json/build.yaml). -->
-    <Version>1.1.0.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.1.0.1</Version>
+    <AssemblyVersion>1.1.0.1</AssemblyVersion>
+    <FileVersion>1.1.0.1</FileVersion>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

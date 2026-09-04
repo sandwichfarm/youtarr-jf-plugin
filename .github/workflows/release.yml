@@ -4,8 +4,8 @@
 #
 # HOW TO CUT A RELEASE
 #   1. Bump `version:` (and `changelog:`) in Jellyfin.Plugin.Youtarr/build.yaml.
-#   2. Tag and push:   git tag v1.1.0.0 && git push --tags
-#   The tag must match v*.*.* (e.g. v1.1.0.0). The job builds dist/youtarrmetadata_<version>.zip,
+#   2. Tag and push:   git tag v1.1.0.1 && git push --tags
+#   The tag must match v*.*.* (e.g. v1.1.0.1). The job builds dist/youtarrmetadata_<version>.zip,
 #   creates the GitHub Release for that tag with the ZIP attached, then commits the
 #   regenerated manifest.json back to the default branch.
 #

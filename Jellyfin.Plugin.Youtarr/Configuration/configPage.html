@@ -79,9 +79,7 @@
                 </form>
             </div>
         </div>
-    </div>
-
-    <script>
+        <script type="text/javascript">
         /*
          * Plugin GUID: MUST match Plugin.StaticId exactly — never change between releases.
          * Source: Jellyfin.Plugin.Youtarr/Plugin.cs StaticId field.
@@ -91,37 +89,44 @@
         };
 
         // PAGE SHOW: load the current configuration from the server and populate the form.
-        document.querySelector('#YoutarrConfigPage')
+        var youtarrConfigPage = document.querySelector('#YoutarrConfigPage');
+
+        youtarrConfigPage
             .addEventListener('pageshow', function () {
+                var page = this;
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(YoutarrConfig.pluginUniqueId)
                     .then(function (config) {
-                        document.querySelector('#YearSeasons').checked =
+                        page.querySelector('#YearSeasons').checked =
                             config.YearSeasons;
-                        document.querySelector('#EpisodeNumberingScheme').value =
+                        page.querySelector('#EpisodeNumberingScheme').value =
                             config.EpisodeNumberingScheme;
-                        document.querySelector('#MaxDescriptionLength').value =
+                        page.querySelector('#MaxDescriptionLength').value =
                             config.MaxDescriptionLength;
                         Dashboard.hideLoadingMsg();
                     });
             });
 
         // FORM SUBMIT: re-fetch config, apply the form values, and save back to the server.
-        document.querySelector('#YoutarrConfigForm')
+        youtarrConfigPage.querySelector('#YoutarrConfigForm')
             .addEventListener('submit', function (e) {
+                var form = e.currentTarget;
                 Dashboard.showLoadingMsg();
                 ApiClient.getPluginConfiguration(YoutarrConfig.pluginUniqueId)
                     .then(function (config) {
                         config.YearSeasons =
-                            document.querySelector('#YearSeasons').checked;
+                            form.querySelector('#YearSeasons').checked;
                         config.EpisodeNumberingScheme =
-                            document.querySelector('#EpisodeNumberingScheme').value;
+                            form.querySelector('#EpisodeNumberingScheme').value;
                         // MaxDescriptionLength is an int field; .value is always a string,
                         // so parseInt is required before assigning (RESEARCH Pitfall 5).
-                        config.MaxDescriptionLength =
-                            parseInt(document.querySelector('#MaxDescriptionLength').value, 10);
+                        var maxDescriptionLength =
+                            parseInt(form.querySelector('#MaxDescriptionLength').value, 10);
+                        if (!Number.isNaN(maxDescriptionLength)) {
+                            config.MaxDescriptionLength = maxDescriptionLength;
+                        }
 
-                        ApiClient.updatePluginConfiguration(
+                        return ApiClient.updatePluginConfiguration(
                             YoutarrConfig.pluginUniqueId, config
                         ).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
@@ -130,6 +135,7 @@
                 e.preventDefault();
                 return false;
             });
-    </script>
+        </script>
+    </div>
 </body>
 </html>

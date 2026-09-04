@@ -5,7 +5,7 @@
 #
 # Usage:
 #   ./scripts/deploy-plugin.sh
-#   JELLYFIN_PLUGIN_DIR=/path/to/YoutarrMetadata_1.1.0.0 \
+#   JELLYFIN_PLUGIN_DIR=/path/to/YoutarrMetadata_1.1.0.1 \
 #     JELLYFIN_CONTAINER=jellyfin ./scripts/deploy-plugin.sh
 #
 set -euo pipefail
